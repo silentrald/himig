@@ -1,0 +1,25 @@
+generic:
+  add: Add
+  address: Address
+  back: Back
+  cache: Cache
+  create: Create
+  delete: Delete
+  name: Name
+  none: None
+  path: Path
+  password: Password
+  refresh: Refresh
+  scan: Scan
+  settings: Settings
+  unknown: Unknown
+  update: Update
+  username: Username
+
+source:
+  folder: Folder
+  subsonic: Subsonic
+
+folderReadWrite:
+  read: Read
+  readAndWrite: Read & Write

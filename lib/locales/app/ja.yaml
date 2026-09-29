@@ -1,0 +1,25 @@
+generic:
+  add: 追加
+  address: 住所
+  back: 戻る
+  cache: キャッシュ
+  create: 作成する
+  delete: 削除
+  name: 名前
+  none: なし
+  path: パス
+  password: パスワード
+  refresh: リフレッシュ
+  scan: スキャン
+  settings: 設定
+  unknown: 不明
+  update: アップデート
+  username: ユーザー名
+
+source:
+  folder: フォルダ
+  subsonic: Subsonic
+
+folderReadWrite:
+  read: 読む
+  readAndWrite: 読み書き
