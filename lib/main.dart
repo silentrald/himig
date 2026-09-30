@@ -2,11 +2,11 @@ import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:himig/constant.dart" as constant;
 import "package:himig/frontend/components/now_playing_bar.dart";
+import "package:himig/frontend/controllers/locale.dart";
 import "package:himig/frontend/pages/album_page.dart";
 import "package:himig/frontend/pages/home_page.dart";
 import "package:himig/frontend/pages/settings_page.dart";
 import "package:himig/inject.dart" as inject;
-import "package:himig/locale.dart";
 import "package:himig/locales/app_localizations.dart";
 
 Future<void> main() async {
@@ -59,7 +59,7 @@ class _HimigAppState extends State<HimigApp> {
       builder: _getBuilder,
 
       locale: widget.localeController.locale,
-      supportedLocales: constant.supportedLocales,
+      supportedLocales: LocaleController.supportedLocales,
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -92,12 +92,13 @@ class _HimigAppState extends State<HimigApp> {
             margin: EdgeInsets.only(bottom: widget._barHeight + 8.0),
             child: Align(alignment: Alignment.topCenter, child: child),
           ),
+
           SizedBox(
             height: widget._barHeight,
             child: Align(
               alignment: Alignment.bottomCenter,
               child: NowPlayingBar(),
-            ),
+            )
           ),
         ],
       ),

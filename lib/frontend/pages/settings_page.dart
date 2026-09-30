@@ -1,11 +1,10 @@
 import "package:flutter/material.dart";
 import "package:himig/backend/entities/source.dart";
 import "package:himig/backend/use_cases/settings/types.dart";
-import "package:himig/constant.dart";
 import "package:himig/frontend/components/setting/folder_source_form.dart";
 import "package:himig/frontend/components/setting/subsonic_source_form.dart";
+import "package:himig/frontend/controllers/locale.dart";
 import "package:himig/inject.dart";
-import "package:himig/locale.dart";
 import "package:himig/locales/app_localizations.dart";
 import "package:himig/state.dart";
 import "package:himig/utils/logger.dart" as logger;
@@ -151,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildLanguageDropdown() {
     return DropdownButton<Locale>(
       value: widget._localeController.locale,
-      items: supportedLocales
+      items: LocaleController.supportedLocales
           .map(
             (l) => DropdownMenuItem(
               value: l,
