@@ -5,13 +5,15 @@ import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/use_cases/home/types.dart";
 import "package:himig/frontend/components/album/album_card.dart";
 import "package:himig/inject.dart";
+import "package:himig/locale.dart";
 import "package:himig/locales/app_localizations.dart";
 import "package:himig/state.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final LocaleController _localeController;
+  const HomePage({super.key, required this._localeController});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -45,6 +47,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
+    widget._localeController.addListener(_onLocaleChange);
+
     _albumController.addListener(() async {
       if (_albumPage == -1) {
         return;
@@ -72,6 +76,18 @@ class _HomePageState extends State<HomePage> {
       }
     });
     _load();
+  }
+
+  @override
+  void dispose() {
+    widget._localeController.addListener(_onLocaleChange);
+    super.dispose();
+  }
+
+  void _onLocaleChange() {
+    // Base page of the application, needs to be re-rendered to apply the locale change
+    // Delay the setState on the end the event loop, so the changes will be applied properly
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
   void _onAlbumCardPressed(int index) {

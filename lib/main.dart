@@ -6,33 +6,59 @@ import "package:himig/frontend/pages/album_page.dart";
 import "package:himig/frontend/pages/home_page.dart";
 import "package:himig/frontend/pages/settings_page.dart";
 import "package:himig/inject.dart" as inject;
+import "package:himig/locale.dart";
 import "package:himig/locales/app_localizations.dart";
 
 Future<void> main() async {
   await inject.setup();
 
-  runApp(const MyApp());
+  final localeController = LocaleController();
+  await localeController.initialize();
+
+  runApp(HimigApp(localeController: localeController));
 
   await constant.setup();
 }
 
-class MyApp extends StatelessWidget {
+class HimigApp extends StatefulWidget {
+  final LocaleController localeController;
   final double _barHeight = 50.0;
 
-  const MyApp({super.key});
+  const HimigApp({super.key, required this.localeController});
 
-  // This widget is the root of your application.
+  @override
+  State<StatefulWidget> createState() => _HimigAppState();
+}
+
+class _HimigAppState extends State<HimigApp> {
+  @override
+  void initState() {
+    super.initState();
+    widget.localeController.addListener(_onLocaleChange);
+  }
+
+  @override
+  void dispose() {
+    widget.localeController.removeListener(_onLocaleChange);
+    super.dispose();
+  }
+
+  void _onLocaleChange() {
+    // Rebuild app when locale changes
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Himig",
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.red)),
-      onGenerateRoute: _getRoute,
-      home: const HomePage(),
+      onGenerateRoute: (settings) =>
+          _getRoute(settings, widget.localeController),
+      home: HomePage(localeController: widget.localeController),
       builder: _getBuilder,
 
-      // TODO: check https://flutterlocalisation.com/blog/flutter-change-language-runtime
-      locale: const Locale("en"),
+      locale: widget.localeController.locale,
       supportedLocales: constant.supportedLocales,
       localizationsDelegates: [
         AppLocalizations.delegate,
@@ -40,6 +66,20 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+
+      localeResolutionCallback: (deviceLocale, supportedLocales) {
+        if (widget.localeController.locale != null) {
+          return widget.localeController.locale;
+        }
+
+        for (final locale in supportedLocales) {
+          if (locale.languageCode == deviceLocale?.languageCode) {
+            return locale;
+          }
+        }
+
+        return Locale("en");
+      },
     );
   }
 
@@ -49,11 +89,11 @@ class MyApp extends StatelessWidget {
         fit: StackFit.expand,
         children: <Widget>[
           Container(
-            margin: EdgeInsets.only(bottom: _barHeight + 8.0),
+            margin: EdgeInsets.only(bottom: widget._barHeight + 8.0),
             child: Align(alignment: Alignment.topCenter, child: child),
           ),
           SizedBox(
-            height: _barHeight,
+            height: widget._barHeight,
             child: Align(
               alignment: Alignment.bottomCenter,
               child: NowPlayingBar(),
@@ -64,16 +104,25 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  Route<dynamic>? _getRoute(RouteSettings settings) {
+  Route<dynamic>? _getRoute(
+    RouteSettings settings,
+    LocaleController localeController,
+  ) {
     final arguments = (settings.arguments ?? <String, dynamic>{}) as Map;
 
     switch (settings.name) {
       case "/home":
-        return _buildRoute(settings, const HomePage());
+        return _buildRoute(
+          settings,
+          HomePage(localeController: localeController),
+        );
       case "/album":
         return _buildRoute(settings, AlbumPage(album: arguments["album"]));
       case "/settings":
-        return _buildRoute(settings, const SettingsPage());
+        return _buildRoute(
+          settings,
+          SettingsPage(localeController: localeController),
+        );
       default:
         return null;
     }

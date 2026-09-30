@@ -1,16 +1,20 @@
 import "package:flutter/material.dart";
 import "package:himig/backend/entities/source.dart";
 import "package:himig/backend/use_cases/settings/types.dart";
+import "package:himig/constant.dart";
 import "package:himig/frontend/components/setting/folder_source_form.dart";
 import "package:himig/frontend/components/setting/subsonic_source_form.dart";
 import "package:himig/inject.dart";
+import "package:himig/locale.dart";
 import "package:himig/locales/app_localizations.dart";
 import "package:himig/state.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final LocaleController _localeController;
+
+  const SettingsPage({super.key, required this._localeController});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -68,6 +72,8 @@ class _SettingsPageState extends State<SettingsPage> {
             },
             child: Text(locale.app(.generic, "back")),
           ),
+
+          _buildLanguageDropdown(),
         ],
       ),
     );
@@ -139,6 +145,22 @@ class _SettingsPageState extends State<SettingsPage> {
 
         form,
       ],
+    );
+  }
+
+  Widget _buildLanguageDropdown() {
+    return DropdownButton<Locale>(
+      value: widget._localeController.locale,
+      items: supportedLocales
+          .map(
+            (l) => DropdownMenuItem(
+              value: l,
+              child: Text(LocaleController.getDisplayName(l)),
+            ),
+          )
+          .toList(),
+      isExpanded: true,
+      onChanged: (l) => widget._localeController.setLocale(l!),
     );
   }
 }
