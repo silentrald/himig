@@ -9,12 +9,6 @@ class LocaleController extends ChangeNotifier {
   Locale? _locale;
   Locale? get locale => _locale;
 
-  // Supported locales
-  static const List<Locale> supportedLocales = [
-    Locale("en", "US"),
-    Locale("ja", "JP"),
-  ];
-
   /// Initialize and load saved locale
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();

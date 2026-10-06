@@ -28,11 +28,10 @@ final getIt = GetIt.instance;
 
 Future<void> setup() async {
   WidgetsFlutterBinding.ensureInitialized();
-  JustAudioMediaKit.ensureInitialized(
-    linux: true,
-    android: true,
-    windows: false,
-  );
+
+  if (Platform.isLinux) {
+    JustAudioMediaKit.ensureInitialized(linux: true, windows: false);
+  }
 
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();

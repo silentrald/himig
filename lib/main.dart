@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
+import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/services/player/types.dart";
 import "package:himig/constant.dart" as constant;
 import "package:himig/frontend/components/now_playing_bar.dart";
 import "package:himig/frontend/controllers/locale.dart";
@@ -22,7 +24,6 @@ Future<void> main() async {
 
 class HimigApp extends StatefulWidget {
   final LocaleController localeController;
-  final double _barHeight = 50.0;
 
   const HimigApp({super.key, required this.localeController});
 
@@ -31,15 +32,27 @@ class HimigApp extends StatefulWidget {
 }
 
 class _HimigAppState extends State<HimigApp> {
+  final _playerService = inject.getInject<PlayerService>();
+  SimpleSong? _song;
+  final _barHeight = 100.0 + 16.0;
+
+  late void Function() _changeSongOnEnd;
+
   @override
   void initState() {
     super.initState();
     widget.localeController.addListener(_onLocaleChange);
+
+    _changeSongOnEnd = _playerService.onSongChanged((song) {
+      setState(() => _song = song);
+      print("Changed to ${song.title} ${song.artist}");
+    });
   }
 
   @override
   void dispose() {
     widget.localeController.removeListener(_onLocaleChange);
+    _changeSongOnEnd();
     super.dispose();
   }
 
@@ -59,7 +72,7 @@ class _HimigAppState extends State<HimigApp> {
       builder: _getBuilder,
 
       locale: widget.localeController.locale,
-      supportedLocales: LocaleController.supportedLocales,
+      supportedLocales: supportedLocales,
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -78,7 +91,7 @@ class _HimigAppState extends State<HimigApp> {
           }
         }
 
-        return Locale("en");
+        return Locale("en", "US");
       },
     );
   }
@@ -89,17 +102,15 @@ class _HimigAppState extends State<HimigApp> {
         fit: StackFit.expand,
         children: <Widget>[
           Container(
-            margin: EdgeInsets.only(bottom: widget._barHeight + 8.0),
+            margin: EdgeInsets.only(
+              bottom: _song == null ? 8.0 : _barHeight + 8.0,
+            ),
             child: Align(alignment: Alignment.topCenter, child: child),
           ),
 
-          SizedBox(
-            height: widget._barHeight,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: NowPlayingBar(),
-            )
-          ),
+          ?(_song != null
+              ? NowPlayingBar(height: _barHeight, song: _song!)
+              : null),
         ],
       ),
     );

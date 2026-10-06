@@ -83,7 +83,7 @@ class _AlbumPageState extends State<AlbumPage> {
 
         SliverList(
           delegate: SliverChildBuilderDelegate(
-            (context, index) => _buildSongItem(index),
+            (context, index) => _buildSongItem(index, width),
             childCount: _songs.length,
           ),
         ),
@@ -116,8 +116,12 @@ class _AlbumPageState extends State<AlbumPage> {
     );
   }
 
-  SongItem _buildSongItem(int index) {
+  SongItem _buildSongItem(int index, double width) {
     final Song song = _songs[index];
-    return SongItem(song: song, onTap: () => _onSongItemPressed(index, song));
+    return SongItem(
+      song: song,
+      width: width,
+      onTap: () => _onSongItemPressed(index, song),
+    );
   }
 }

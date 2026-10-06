@@ -150,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildLanguageDropdown() {
     return DropdownButton<Locale>(
       value: widget._localeController.locale,
-      items: LocaleController.supportedLocales
+      items: supportedLocales
           .map(
             (l) => DropdownMenuItem(
               value: l,

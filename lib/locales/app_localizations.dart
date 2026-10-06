@@ -2,12 +2,13 @@ import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:himig/constant.dart";
 import "package:yaml/yaml.dart";
 
 enum AppLocaleKey { generic, source, folderReadWrite }
 
 enum ErrorLocaleKey { _ }
+
+const List<Locale> supportedLocales = [Locale("en", "US"), Locale("ja", "JP")];
 
 class AppLocalizations {
   final Locale locale;
@@ -39,7 +40,7 @@ class AppLocalizations {
     );
 
     // Load the fallback if the current locale is not english
-    if (_appFallbackMap.isEmpty && locale != Locale("en")) {
+    if (_appFallbackMap.isEmpty && locale != Locale("en", "US")) {
       _appFallbackMap = loadYaml(
         await rootBundle.loadString(
           "lib/locales/app/${locale.languageCode}.yaml",

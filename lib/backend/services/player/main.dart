@@ -16,6 +16,7 @@ class MainPlayerService extends PlayerService {
         androidNotificationChannelId: channelId,
         androidNotificationChannelName: channelName,
         androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
       ),
     );
   }
@@ -27,6 +28,9 @@ class MainPlayerService extends PlayerService {
   Future<void> pause() => _audioHandler.pause();
 
   @override
+  Future<void> seek(Duration position) => _audioHandler.seek(position);
+
+  @override
   Future<void> skip(int index) => _audioHandler.skipToQueueItem(index);
 
   @override
@@ -34,6 +38,14 @@ class MainPlayerService extends PlayerService {
 
   @override
   Future<void> skipToPrevious() => _audioHandler.skipToPrevious();
+
+  @override
+  Future<void> setRepeat(PlayerRepeat repeat) =>
+      _audioHandler.setRepeatMode(switch (repeat) {
+        .none => .none,
+        .all => .all,
+        .one => .one,
+      });
 
   @override
   Future<void> addSong(Song song) async {
@@ -54,7 +66,7 @@ class MainPlayerService extends PlayerService {
       (_audioHandler as _AudioPlayerHandler).player.clearAudioSources();
 
   @override
-  VoidCallback onSongChanged(ValueChanged<SimpleSong> callback) {
+  void Function() onSongChanged(ValueChanged<SimpleSong> callback) {
     final subscription = _audioHandler.mediaItem.listen((MediaItem? item) {
       if (item != null) {
         callback(
@@ -62,9 +74,32 @@ class MainPlayerService extends PlayerService {
             title: item.title,
             artist: item.artist,
             coverArtUri: item.artUri,
+            duration: item.duration,
           ),
         );
       }
+    });
+
+    return () => subscription.cancel();
+  }
+
+  @override
+  void Function() onStatusChanged(ValueChanged<PlayerStatus> callback) {
+    final subscription = _audioHandler.playbackState.listen((playbackState) {
+      callback(
+        PlayerStatus(
+          playing: playbackState.playing,
+          shuffle: playbackState.shuffleMode == .all,
+          repeat: switch (playbackState.repeatMode) {
+            .all => .all,
+            .one => .one,
+            _ => .none,
+          },
+          position: playbackState.position,
+          updatePosition: playbackState.updatePosition,
+          bufferedPosition: playbackState.bufferedPosition,
+        ),
+      );
     });
 
     return () => subscription.cancel();
@@ -116,6 +151,14 @@ class _AudioPlayerHandler extends BaseAudioHandler {
   Future<void> stop() => player.stop();
 
   @override
+  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) =>
+      player.setLoopMode(switch (repeatMode) {
+        .all => .all,
+        .one => .one,
+        _ => .off,
+      });
+
+  @override
   Future<void> addQueueItem(MediaItem mediaItem) => player.addAudioSource(
     AudioSource.uri(Uri.parse(mediaItem.id), tag: mediaItem),
   );
@@ -136,14 +179,21 @@ class _AudioPlayerHandler extends BaseAudioHandler {
         MediaAction.seekForward,
         MediaAction.seekBackward,
       },
-      processingState: const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[player.processingState]!,
+      processingState: switch (player.processingState) {
+        ProcessingState.idle => AudioProcessingState.idle,
+        ProcessingState.loading => AudioProcessingState.loading,
+        ProcessingState.buffering => AudioProcessingState.buffering,
+        ProcessingState.ready => AudioProcessingState.ready,
+        ProcessingState.completed => AudioProcessingState.completed,
+      },
       playing: player.playing,
+      // BUG:
+      shuffleMode: player.shuffleModeEnabled ? .all : .none,
+      repeatMode: switch (player.loopMode) {
+        LoopMode.off => AudioServiceRepeatMode.none,
+        LoopMode.all => AudioServiceRepeatMode.all,
+        LoopMode.one => AudioServiceRepeatMode.one,
+      },
       updatePosition: player.position,
       bufferedPosition: player.bufferedPosition,
       speed: player.speed,
