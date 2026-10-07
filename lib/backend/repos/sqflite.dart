@@ -1,64 +1,96 @@
-import "package:himig/backend/repos/repo.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 import "package:sqflite/sqflite.dart";
+// ignore: implementation_imports
+// import "package:sqflite_common_ffi/src/sqflite_ffi_exception.dart";
+
+//final constraintMessageIndex =
+//    "SqliteException(2067): while executing statement, UNIQUE constraint failed: "
+//        .length;
+//final constraintMessageIndex = 76;
 
 class SqfliteRepoClient extends RepoClient {
   final DatabaseExecutor _client;
+  final bool _transaction;
 
-  SqfliteRepoClient({required DatabaseExecutor transaction})
-    : _client = transaction;
+  SqfliteRepoClient({required this._client, required this._transaction});
 
   @override
-  Future<Result<List<Map<String, dynamic>>>> select(
+  bool get transaction => _transaction;
+
+  @override
+  FutureResult<List<Map<String, dynamic>>> select(
     String sqlString, [
     List<dynamic>? arguments,
   ]) async {
     try {
       return Result.ok(await _client.rawQuery(sqlString, arguments));
-    } on Exception catch (error) {
-      return Result.error(error);
+    } on Exception catch (error, stackTrace) {
+      return Result.errorWithStackTrace(error, stackTrace);
     }
   }
 
   @override
-  Future<Result<int>> insert(String table, Map<String, dynamic> values) async {
+  FutureResult<int> insert(String table, Map<String, dynamic> values) async {
     try {
       return Result.ok(await _client.insert(table, values));
-    } on Exception catch (error) {
-      return Result.error(error);
+    // NOTE: Hide implementation for now, if only needed
+    //} on SqfliteFfiException catch (error, stackTrace) {
+    //  if (!error.isUniqueConstraintError()) {
+    //    return Result.errorWithStackTrace(error, stackTrace);
+    //  }
+    //
+    //  final constraintInfo = error.message!
+    //      .substring(
+    //        constraintMessageIndex,
+    //        error.message!.indexOf(",", constraintMessageIndex),
+    //      )
+    //      .split(".");
+    //  return Result.errorWithStackTrace(
+    //    TODO: Replace the error here
+    //    ProjectError(
+    //      .repoUniqueConstraint,
+    //      arguments: {"table": constraintInfo[0], "name": constraintInfo[1]},
+    //    ),
+    //    stackTrace,
+    //  );
+    } on Exception catch (error, stackTrace) {
+      return Result.errorWithStackTrace(error, stackTrace);
     }
   }
 
   @override
-  Future<Result<int>> updateById(
+  FutureResult<int> update(
     String table,
-    String idName,
-    dynamic idValue,
-    Map<String, dynamic> values,
-  ) async {
+    Map<String, dynamic> values, [
+    Map<String, dynamic>? where,
+  ]) async {
     try {
       return Result.ok(
         await _client.update(
           table,
           values,
-          where: "$idName = ?",
-          whereArgs: [idValue],
+          where: where?.keys.map((e) => "$e = ?").join(" AND "),
+          whereArgs: where?.values.toList(),
         ),
       );
-    } on Exception catch (error) {
-      return Result.error(error);
+    } on Exception catch (error, stackTrace) {
+      return Result.errorWithStackTrace(error, stackTrace);
     }
   }
 
   @override
-  Future<Result<int>> delete(
-    String sqlString, [
-    List<dynamic>? arguments,
-  ]) async {
+  FutureResult<int> delete(String table, [Map<String, dynamic>? where]) async {
     try {
-      return Result.ok(await _client.rawDelete(sqlString, arguments));
-    } on Exception catch (error) {
-      return Result.error(error);
+      return Result.ok(
+        await _client.delete(
+          table,
+          where: where?.keys.map((e) => "$e = ?").join(" AND "),
+          whereArgs: where?.values.toList(),
+        ),
+      );
+    } on Exception catch (error, stackTrace) {
+      return Result.errorWithStackTrace(error, stackTrace);
     }
   }
 }
@@ -69,27 +101,29 @@ class SqfliteRepoDatabase extends RepoDatabase {
 
   SqfliteRepoDatabase({required Database database})
     : _database = database,
-      _client = SqfliteRepoClient(transaction: database);
+      _client = SqfliteRepoClient(client: database, transaction: false);
 
   @override
   RepoClient get client => _client;
 
   @override
-  Future<Result<T>> startTransaction<T>(
-    Future<Result<T>> Function(RepoClient) transaction,
+  FutureResult<T> startTransaction<T>(
+    FutureResult<T> Function(RepoClient) transaction,
   ) async {
     try {
       return await _database.transaction((database) async {
         final result = await transaction(
-          SqfliteRepoClient(transaction: database),
+          SqfliteRepoClient(client: database, transaction: true),
         );
         if (result is ResultError) {
-          throw result.error;
+          throw result;
         }
         return result;
       });
-    } on Exception catch (error) {
-      return Result.error(error);
+    } on ResultError catch (error) {
+      return error.toError();
+    } on Exception catch (error, stackTrace) {
+      return Result.errorWithStackTrace(error, stackTrace);
     }
   }
 }

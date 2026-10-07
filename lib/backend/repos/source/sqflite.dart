@@ -1,7 +1,7 @@
 import "dart:convert";
 
 import "package:himig/backend/entities/source.dart";
-import "package:himig/backend/repos/repo.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/repos/source/types.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
@@ -67,11 +67,15 @@ class SqfliteSourceRepo extends SourceRepo {
 
   @override
   Future<Result<Source>> updateSource(RepoClient client, Source source) async {
-    final result = await client.updateById("sources", "id", source.id, {
-      "name": source.name,
-      "type": source.type.name,
-      "data": source.serialize(),
-    });
+    final result = await client.update(
+      "sources",
+      {
+        "name": source.name,
+        "type": source.type.name,
+        "data": source.serialize(),
+      },
+      {"id": source.id},
+    );
 
     switch (result) {
       case ResultError(:var error):
@@ -88,6 +92,6 @@ class SqfliteSourceRepo extends SourceRepo {
 
   @override
   Future<Result<int>> deleteAllSources(RepoClient client) async {
-    return await client.delete("DELETE FROM sources");
+    return await client.delete("sources");
   }
 }

@@ -1,7 +1,7 @@
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/entities/song.dart";
-import "package:himig/backend/repos/repo.dart";
 import "package:himig/backend/repos/song/types.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/services/fetch/types.dart";
 import "package:himig/backend/services/source/types.dart";
 import "package:himig/backend/use_cases/album/types.dart";
@@ -16,14 +16,11 @@ class AlbumUseCaseV1 extends AlbumUseCase {
   final SourceService _sourceService;
 
   AlbumUseCaseV1({
-    required RepoDatabase database,
-    required SongRepo songRepo,
-    required FetchService fetchService,
-    required SourceService sourceService,
-  }) : _database = database,
-       _songRepo = songRepo,
-       _fetchService = fetchService,
-       _sourceService = sourceService;
+    required this._database,
+    required this._songRepo,
+    required this._fetchService,
+    required this._sourceService,
+  });
 
   @override
   Future<Result<List<Song>>> getSongsByAlbum(int albumId) {

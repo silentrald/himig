@@ -1,5 +1,5 @@
 import "package:himig/backend/entities/song.dart";
-import "package:himig/backend/repos/repo.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/utils/result.dart";
 
@@ -95,20 +95,24 @@ class SqfliteSongRepo extends SongRepo {
 
   @override
   Future<Result<Song>> updateSong(RepoClient client, Song song) async {
-    final result = await client.updateById("songs", "id", song.id, {
-      "title": song.title,
-      "album": song.album,
-      "artist": song.artist,
-      "duration": song.duration,
-      "reference": song.reference,
-      "release_year": song.releaseYear,
-      "local_source_id": song.localSourceId,
-      "local_uri": song.localUri?.toString(),
-      "remote_source_id": song.remoteSourceId,
-      "remote_uri": song.remoteUri?.toString(),
-      "cover_art_uri": song.coverArtUri?.toString(),
-      "album_id": song.albumId,
-    });
+    final result = await client.update(
+      "songs",
+      {
+        "title": song.title,
+        "album": song.album,
+        "artist": song.artist,
+        "duration": song.duration,
+        "reference": song.reference,
+        "release_year": song.releaseYear,
+        "local_source_id": song.localSourceId,
+        "local_uri": song.localUri?.toString(),
+        "remote_source_id": song.remoteSourceId,
+        "remote_uri": song.remoteUri?.toString(),
+        "cover_art_uri": song.coverArtUri?.toString(),
+        "album_id": song.albumId,
+      },
+      {"id": song.id},
+    );
 
     switch (result) {
       case ResultError(:var error):
@@ -125,6 +129,6 @@ class SqfliteSongRepo extends SongRepo {
 
   @override
   Future<Result<int>> deleteAllSongs(RepoClient client) async {
-    return await client.delete("DELETE FROM songs");
+    return await client.delete("songs");
   }
 }

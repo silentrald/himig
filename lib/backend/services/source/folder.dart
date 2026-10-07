@@ -4,8 +4,8 @@ import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/entities/source.dart";
 import "package:himig/backend/repos/album/types.dart";
-import "package:himig/backend/repos/repo.dart";
 import "package:himig/backend/repos/song/types.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/services/metadata/types.dart";
 import "package:himig/backend/services/source/types.dart";
 import "package:himig/locales/app_localizations.dart";
@@ -20,12 +20,10 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
   final MetadataService _metadataService;
 
   FolderSourceImplementation({
-    required AlbumRepo albumRepo,
-    required SongRepo songRepo,
-    required MetadataService metadataService,
-  }) : _albumRepo = albumRepo,
-       _songRepo = songRepo,
-       _metadataService = metadataService;
+    required this._albumRepo,
+    required this._songRepo,
+    required this._metadataService,
+  });
 
   Future<List<FileSystemEntity>> _listSafe(Directory directory) async {
     return directory.list(recursive: true, followLinks: false).handleError((

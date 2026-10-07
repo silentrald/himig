@@ -1,6 +1,6 @@
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/repos/album/types.dart";
-import "package:himig/backend/repos/repo.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 
 class SqfliteAlbumRepo extends AlbumRepo {
@@ -65,6 +65,6 @@ class SqfliteAlbumRepo extends AlbumRepo {
 
   @override
   Future<Result<int>> deleteAllAlbums(RepoClient client) async {
-    return await client.delete("DELETE FROM albums");
+    return await client.delete("albums");
   }
 }

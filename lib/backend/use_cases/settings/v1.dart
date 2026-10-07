@@ -1,8 +1,8 @@
 import "package:himig/backend/entities/source.dart";
 import "package:himig/backend/repos/album/types.dart";
-import "package:himig/backend/repos/repo.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/backend/repos/source/types.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/services/source/types.dart";
 import "package:himig/backend/use_cases/settings/types.dart";
 import "package:himig/state.dart";
@@ -17,16 +17,12 @@ class SettingsUseCaseV1 extends SettingsUseCase {
   final SourceService _sourceService;
 
   SettingsUseCaseV1({
-    required RepoDatabase database,
-    required SourceRepo sourceRepo,
-    required AlbumRepo albumRepo,
-    required SongRepo songRepo,
-    required SourceService sourceService,
-  }) : _database = database,
-       _sourceRepo = sourceRepo,
-       _albumRepo = albumRepo,
-       _songRepo = songRepo,
-       _sourceService = sourceService;
+    required this._database,
+    required this._sourceRepo,
+    required this._albumRepo,
+    required this._songRepo,
+    required this._sourceService,
+  });
 
   @override
   Future<Result<void>> loadSources() async {

@@ -1,5 +1,5 @@
 import "package:himig/backend/entities/album.dart";
-import "package:himig/backend/repos/repo.dart";
+import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 
 abstract class AlbumRepo {
