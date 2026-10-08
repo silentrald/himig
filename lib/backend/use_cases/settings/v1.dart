@@ -1,5 +1,6 @@
 import "package:himig/backend/entities/source.dart";
 import "package:himig/backend/repos/album/types.dart";
+import "package:himig/backend/repos/artist/types.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/backend/repos/source/types.dart";
 import "package:himig/backend/repos/types.dart";
@@ -13,6 +14,7 @@ class SettingsUseCaseV1 extends SettingsUseCase {
   final RepoDatabase _database;
   final SourceRepo _sourceRepo;
   final AlbumRepo _albumRepo;
+  final ArtistRepo _artistRepo;
   final SongRepo _songRepo;
   final SourceService _sourceService;
 
@@ -20,6 +22,7 @@ class SettingsUseCaseV1 extends SettingsUseCase {
     required this._database,
     required this._sourceRepo,
     required this._albumRepo,
+    required this._artistRepo,
     required this._songRepo,
     required this._sourceService,
   });
@@ -66,14 +69,19 @@ class SettingsUseCaseV1 extends SettingsUseCase {
   @override
   Future<Result<int>> scanSources() async {
     return await _database.startTransaction((client) async {
+      final artistResult = await _artistRepo.deleteAllArtists(client);
+      if (artistResult is ResultError) {
+        return artistResult.toError();
+      }
+
       final albumResult = await _albumRepo.deleteAllAlbums(client);
       if (albumResult is ResultError) {
-        return Result.error(albumResult.error);
+        return albumResult.toError();
       }
 
       final songResult = await _songRepo.deleteAllSongs(client);
       if (songResult is ResultError) {
-        return Result.error(songResult.error);
+        return songResult.toError();
       }
 
       int count = 0;

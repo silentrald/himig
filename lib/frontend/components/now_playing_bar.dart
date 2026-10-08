@@ -1,11 +1,11 @@
 import "dart:async";
 import "dart:io";
-import "dart:math";
 
 import "package:flutter/material.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/services/player/types.dart";
 import "package:himig/frontend/components/generic/overflow_text.dart";
+import "package:himig/frontend/components/generic/uri_image.dart";
 import "package:himig/inject.dart";
 import "package:himig/locales/app_localizations.dart";
 import "package:himig/utils/logger.dart" as logger;
@@ -13,8 +13,14 @@ import "package:himig/utils/logger.dart" as logger;
 class NowPlayingBar extends StatefulWidget {
   final double height;
   final SimpleSong song;
+  final void Function()? _onSongInfoPressed;
 
-  const NowPlayingBar({super.key, required this.height, required this.song});
+  const NowPlayingBar({
+    super.key,
+    required this.height,
+    required this.song,
+    this._onSongInfoPressed,
+  });
 
   @override
   State<NowPlayingBar> createState() => _NowPlayingBarState();
@@ -97,11 +103,11 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
     if (_status.playing) {
       _playerService.pause();
       _stopInterval();
-      logger.info("Play song");
+      logger.info("Pause song");
     } else {
       _playerService.play();
       _startInterval();
-      logger.info("Pause song");
+      logger.info("Play song");
     }
   }
 
@@ -133,35 +139,29 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
     final width = MediaQuery.of(context).size.width;
     final remainingWidth = width - (_buttonSize * 4) - (_paddingSize * 3);
 
-    return Overlay(
-      initialEntries: [
-        OverlayEntry(
-          builder: (context) => Align(
-            alignment: .bottomCenter,
-            child: Container(
-              padding: EdgeInsets.all(_paddingSize),
-              height: widget.height,
-              color: theme.colorScheme.primary,
-              child: Column(
-                mainAxisAlignment: .spaceAround,
-                children: [
-                  Row(
-                    mainAxisAlignment: .spaceBetween,
-                    children: [
-                      _buildSongInfo(locale, theme, width: remainingWidth),
-                      _buildMediaButtons(theme),
-                    ],
-                  ),
-
-                  SizedBox(width: _paddingSize),
-
-                  _buildMediaScroll(theme),
-                ],
-              ),
+    return Align(
+      alignment: .bottomCenter,
+      child: Container(
+        padding: EdgeInsets.all(_paddingSize),
+        height: widget.height,
+        color: theme.colorScheme.primary,
+        child: Column(
+          mainAxisAlignment: .spaceAround,
+          children: [
+            Row(
+              mainAxisAlignment: .spaceBetween,
+              children: [
+                _buildSongInfo(locale, theme, width: remainingWidth),
+                _buildMediaButtons(theme),
+              ],
             ),
-          ),
+
+            // TODO: time info for song, scroll should be in the now playing page
+            //SizedBox(width: _paddingSize),
+            //_buildMediaScroll(theme),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -172,65 +172,47 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
   }) {
     final titleWidth = width - _imageSize - _paddingSize;
 
-    return Row(
-      mainAxisAlignment: .start,
+    return GestureDetector(
+      onTap: widget._onSongInfoPressed,
+      child: Row(
+        mainAxisAlignment: .start,
 
-      children: [
-        ?_getImage(widget.song.coverArtUri),
+        children: [
+          UriImage(
+            widget.song.coverArtUri,
+            width: _imageSize,
+            height: _imageSize,
+            backgroundColor: Colors.white,
+          ),
 
-        SizedBox(width: _paddingSize),
+          SizedBox(width: _paddingSize),
 
-        Column(
-          mainAxisSize: .min,
-          mainAxisAlignment: .center,
-          crossAxisAlignment: .start,
-          children: [
-            OverflowText(
-              widget.song.title,
-              width: titleWidth,
-              style: TextStyle(
-                fontSize: 14.0,
-                fontWeight: .bold,
-                color: theme.colorScheme.onPrimary,
+          Column(
+            mainAxisSize: .min,
+            mainAxisAlignment: .center,
+            crossAxisAlignment: .start,
+            children: [
+              OverflowText(
+                widget.song.title,
+                width: titleWidth,
+                style: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: .bold,
+                  color: theme.colorScheme.onPrimary,
+                ),
               ),
-            ),
 
-            Text(
-              widget.song.artist ?? locale.app(.generic, "unknown"),
-              style: TextStyle(
-                fontSize: 12.0,
-                color: theme.colorScheme.onPrimary,
+              Text(
+                widget.song.artist ?? locale.app(.generic, "unknown"),
+                style: TextStyle(
+                  fontSize: 12.0,
+                  color: theme.colorScheme.onPrimary,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // TODO: Create a component
-  Widget? _getImage(Uri? coverArtUri) {
-    final theme = Theme.of(context);
-    if (coverArtUri == null) {
-      return Container(
-        color: theme.colorScheme.onPrimary,
-        width: _imageSize,
-        height: _imageSize,
-      );
-    }
-
-    if (coverArtUri.isScheme("file")) {
-      return Image.file(
-        File.fromUri(coverArtUri),
-        width: _imageSize,
-        height: _imageSize,
-      );
-    }
-
-    return Image.network(
-      coverArtUri.toString(),
-      width: _imageSize,
-      height: _imageSize,
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -290,22 +272,23 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
     );
   }
 
-  Widget _buildMediaScroll(ThemeData theme) {
-    final duration = widget.song.duration!.inMilliseconds;
-
-    return Slider(
-      value: min(1.0, _status.position.inMilliseconds / duration),
-      activeColor: theme.colorScheme.tertiary,
-      thumbColor: theme.colorScheme.tertiary,
-      secondaryActiveColor: theme.colorScheme.onSecondary,
-      inactiveColor: theme.colorScheme.secondary,
-      secondaryTrackValue: min(
-        1.0,
-        _status.bufferedPosition.inMilliseconds / duration,
-      ),
-      onChanged: (value) => _playerService.seek(
-        Duration(milliseconds: (duration * value).truncate()),
-      ),
-    );
-  }
+  // TODO: Reuse in now playing page
+  //Widget _buildMediaScroll(ThemeData theme) {
+  //  final duration = widget.song.duration!.inMilliseconds;
+  //
+  //  return Slider(
+  //    value: min(1.0, _status.position.inMilliseconds / duration),
+  //    activeColor: theme.colorScheme.tertiary,
+  //    thumbColor: theme.colorScheme.tertiary,
+  //    secondaryActiveColor: theme.colorScheme.onSecondary,
+  //    inactiveColor: theme.colorScheme.secondary,
+  //    secondaryTrackValue: min(
+  //      1.0,
+  //      _status.bufferedPosition.inMilliseconds / duration,
+  //    ),
+  //    onChanged: (value) => _playerService.seek(
+  //      Duration(milliseconds: (duration * value).truncate()),
+  //    ),
+  //  );
+  //}
 }

@@ -1,13 +1,12 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
 import "package:himig/backend/entities/album.dart";
+import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/use_cases/home/types.dart";
-import "package:himig/frontend/components/album/album_card.dart";
+import "package:himig/frontend/components/cards/album_card.dart";
+import "package:himig/frontend/components/cards/artist_card.dart";
 import "package:himig/frontend/controllers/locale.dart";
 import "package:himig/inject.dart";
 import "package:himig/locales/app_localizations.dart";
-import "package:himig/state.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
@@ -26,20 +25,38 @@ class _HomePageState extends State<HomePage> {
   int _albumPage = 1;
   final List<Album> _albums = [];
 
-  Future<void> _load() async {
+  final _artistController = ScrollController();
+  int _artistPage = 1;
+  final List<Artist> _artists = [];
+
+  final _sectionHeight = 300.0;
+
+  void _load() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       setState(() {
         _albumPage = 1;
         _albums.clear();
+
+        _artistPage = 1;
+        _artists.clear();
       });
 
-      final result = await _homeUseCase.getAlbumList(page: _albumPage);
-      switch (result) {
-        case ResultOk(:var value):
-          setState(() => _albums.addAll(value));
-        case ResultError(:var error):
-          logger.error("Could not get album list", error: error);
+      final albumResult = await _homeUseCase.getAlbumList(page: _albumPage);
+      if (albumResult is ResultError) {
+        logger.error("Could not get album list", error: albumResult.error);
+        return;
       }
+
+      final artistResult = await _homeUseCase.getArtistList(page: _artistPage);
+      if (artistResult is ResultError) {
+        logger.error("Could not get artist list", error: artistResult.error);
+        return;
+      }
+
+      setState(() {
+        _albums.addAll(albumResult.value);
+        _artists.addAll(artistResult.value);
+      });
     });
   }
 
@@ -75,6 +92,33 @@ class _HomePageState extends State<HomePage> {
         setState(() => _albums.addAll(newAlbums));
       }
     });
+
+    _artistController.addListener(() async {
+      if (_artistPage == -1) {
+        return;
+      }
+
+      if (_artistController.offset >=
+              _artistController.position.maxScrollExtent &&
+          !_artistController.position.outOfRange) {
+        ++_artistPage;
+        logger.info("Artists loading page $_artistPage");
+
+        final result = await _homeUseCase.getArtistList(page: _artistPage);
+        if (result is ResultError) {
+          logger.error("Could not get artist list", error: result.error);
+          return;
+        }
+
+        final List<Artist> newArtists = result.value;
+        if (newArtists.isEmpty) {
+          _artistPage = -1;
+          return;
+        }
+
+        setState(() => _artists.addAll(newArtists));
+      }
+    });
     _load();
   }
 
@@ -90,12 +134,12 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
-  void _onAlbumCardPressed(int index) {
-    Navigator.pushNamed(
-      context,
-      "/album",
-      arguments: {"album": _albums[index]},
-    );
+  void _onAlbumCardPressed(Album album) {
+    Navigator.pushNamed(context, "/album", arguments: {"album": album});
+  }
+
+  void _onArtistCardPressed(Artist artist) {
+    Navigator.pushNamed(context, "/artist", arguments: {"artist": artist});
   }
 
   @override
@@ -103,41 +147,63 @@ class _HomePageState extends State<HomePage> {
     final locale = AppLocalizations.instance;
 
     return SafeArea(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          _buildAlbums(),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(locale.app(.generic, "albums")),
 
-          TextButton(
-            onPressed: () => Navigator.pushNamed(context, "/settings"),
-            child: Text(locale.app(.generic, "settings")),
-          ),
+            _buildAlbums(locale),
 
-          TextButton(
-            onPressed: () => _load(),
-            child: Text(locale.app(.generic, "refresh")),
-          ),
-        ],
+            Text(locale.app(.generic, "artists")),
+
+            _buildArtists(locale),
+
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, "/settings"),
+              child: Text(locale.app(.generic, "settings")),
+            ),
+
+            TextButton(
+              onPressed: () => _load(),
+              child: Text(locale.app(.generic, "refresh")),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAlbums() {
+  Widget _buildAlbums(AppLocalizations locale) {
     return SizedBox(
-      height: 350,
+      height: _sectionHeight,
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         scrollDirection: Axis.horizontal,
         itemCount: _albums.length,
         separatorBuilder: (_, _) => SizedBox(width: 16),
         itemBuilder: (context, index) => AlbumCard(
-          album: _albums[index].name,
-          artist: _albums[index].artist,
-          sourceType: AppState().getSource(_albums[index].sourceId).type,
-          coverArtUri: _albums[index].coverArtUri,
-          onTap: () => _onAlbumCardPressed(index),
+          _albums[index],
+          onTap: () => _onAlbumCardPressed(_albums[index]),
         ),
         controller: _albumController,
+      ),
+    );
+  }
+
+  Widget _buildArtists(AppLocalizations locale) {
+    return SizedBox(
+      height: _sectionHeight,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        scrollDirection: Axis.horizontal,
+        itemCount: _artists.length,
+        separatorBuilder: (_, _) => SizedBox(width: 16),
+        itemBuilder: (context, index) => ArtistCard(
+          artist: _artists[index],
+          onTap: () => _onArtistCardPressed(_artists[index]),
+        ),
+        controller: _artistController,
       ),
     );
   }

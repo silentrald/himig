@@ -4,7 +4,8 @@ CREATE TABLE sources (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   type TEXT NOT NULL,
-  data TEXT NOT NULL
+  data TEXT NOT NULL,
+  CONSTRAINT unq_sources_name UNIQUE (name)
 )
 """
       .trim();

@@ -17,7 +17,7 @@ class AudioMetadataReaderMetadataService extends MetadataService {
           album: metadata.album,
           artist: metadata.artist,
           releaseYear: metadata.year?.year,
-          duration: metadata.duration?.inSeconds,
+          duration: metadata.duration,
           image: metadata.pictures.elementAtOrNull(0)?.bytes,
         ),
       );

@@ -4,6 +4,7 @@ import "package:flutter/material.dart";
 import "package:get_it/get_it.dart";
 import "package:himig/backend/database/main.dart";
 import "package:himig/backend/repos/album/sqflite.dart";
+import "package:himig/backend/repos/artist/sqflite.dart";
 import "package:himig/backend/repos/song/sqflite.dart";
 import "package:himig/backend/repos/source/sqflite.dart";
 import "package:himig/backend/repos/sqflite.dart";
@@ -16,6 +17,8 @@ import "package:himig/backend/services/source/subsonic.dart";
 import "package:himig/backend/services/source/v1.dart";
 import "package:himig/backend/use_cases/album/types.dart";
 import "package:himig/backend/use_cases/album/v1.dart";
+import "package:himig/backend/use_cases/artist/types.dart";
+import "package:himig/backend/use_cases/artist/v1.dart";
 import "package:himig/backend/use_cases/home/types.dart";
 import "package:himig/backend/use_cases/home/v1.dart";
 import "package:himig/backend/use_cases/settings/types.dart";
@@ -49,20 +52,22 @@ Future<void> setup() async {
   final database = SqfliteRepoDatabase(database: sqfliteDatabase);
 
   final albumRepo = SqfliteAlbumRepo();
+  final artistRepo = SqfliteArtistRepo();
   final songRepo = SqfliteSongRepo();
   final sourceRepo = SqfliteSourceRepo();
 
-  //final fetchService = HttpFetchService();
   final fetchService = DioFetchService();
   final metadataService = AudioMetadataReaderMetadataService();
 
   final folderSourceImpl = FolderSourceImplementation(
     albumRepo: albumRepo,
+    artistRepo: artistRepo,
     songRepo: songRepo,
     metadataService: metadataService,
   );
   final subsonicSourceImpl = SubsonicSourceImplementation(
     albumRepo: albumRepo,
+    artistRepo: artistRepo,
     songRepo: songRepo,
     fetchService: fetchService,
   );
@@ -82,7 +87,11 @@ Future<void> setup() async {
 
   // UseCases
   getIt.registerLazySingleton<HomeUseCase>(
-    () => HomeUseCaseV1(database: database, albumRepo: albumRepo),
+    () => HomeUseCaseV1(
+      database: database,
+      albumRepo: albumRepo,
+      artistRepo: artistRepo,
+    ),
   );
   getIt.registerLazySingleton<AlbumUseCase>(
     () => AlbumUseCaseV1(
@@ -92,10 +101,18 @@ Future<void> setup() async {
       sourceService: sourceService,
     ),
   );
+  getIt.registerLazySingleton<ArtistUseCase>(
+    () => ArtistUseCaseV1(
+      database: database,
+      albumRepo: albumRepo,
+      songRepo: songRepo,
+    ),
+  );
   final settingsUseCase = SettingsUseCaseV1(
     database: database,
     sourceRepo: sourceRepo,
     albumRepo: albumRepo,
+    artistRepo: artistRepo,
     songRepo: songRepo,
     sourceService: sourceService,
   );

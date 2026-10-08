@@ -7,6 +7,8 @@ import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
 class SqfliteSourceRepo extends SourceRepo {
+  static const _tableName = "sources";
+
   @override
   Future<Result<List<Source>>> getAllSources(RepoClient client) async {
     final result = await client.select("SELECT * FROM sources");
@@ -45,7 +47,7 @@ class SqfliteSourceRepo extends SourceRepo {
 
   @override
   Future<Result<Source>> insertSource(RepoClient client, Source source) async {
-    final result = await client.insert("sources", {
+    final result = await client.insert(_tableName, {
       "name": source.name,
       "type": source.type.name,
       "data": source.serialize(),
@@ -68,7 +70,7 @@ class SqfliteSourceRepo extends SourceRepo {
   @override
   Future<Result<Source>> updateSource(RepoClient client, Source source) async {
     final result = await client.update(
-      "sources",
+      _tableName,
       {
         "name": source.name,
         "type": source.type.name,
@@ -92,6 +94,6 @@ class SqfliteSourceRepo extends SourceRepo {
 
   @override
   Future<Result<int>> deleteAllSources(RepoClient client) async {
-    return await client.delete("sources");
+    return await client.delete(_tableName);
   }
 }

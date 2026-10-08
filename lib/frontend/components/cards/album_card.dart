@@ -1,34 +1,29 @@
-import "dart:io";
-
 import "package:flutter/material.dart";
+import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/entities/source.dart";
+import "package:himig/frontend/components/generic/uri_image.dart";
+import "package:himig/locales/app_localizations.dart";
+import "package:himig/state.dart";
 
 class AlbumCard extends StatelessWidget {
-  final _imageSize = 160.0;
-  final _iconSize = 24.0;
+  final double _imageSize;
+  final double _iconSize;
 
-  final String _album;
-  final String _artist;
-  final SourceType _sourceType;
-  final Uri? _coverArtUri;
-  final VoidCallback _onTap;
+  final Album _album;
+  final VoidCallback? _onTap;
 
-  const AlbumCard({
+  const AlbumCard(
+    this._album, {
     super.key,
-    required album,
-    required artist,
-    required coverArtUri,
-    required SourceType sourceType,
-    required VoidCallback onTap,
-  }) : _album = album,
-       _artist = artist,
-       _sourceType = sourceType,
-       _coverArtUri = coverArtUri,
-       _onTap = onTap;
+    this._imageSize = 160.0,
+    this._iconSize = 24.0,
+    this._onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final locale = AppLocalizations.of(context)!;
 
     return SizedBox(
       width: _imageSize,
@@ -39,12 +34,11 @@ class AlbumCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                Container(
-                  width: _imageSize,
-                  height: _imageSize,
-                  color: theme.colorScheme.primary,
-                  child: _getImage(context),
+                UriImage(
+                  _album.coverArtUri,
+                  backgroundColor: theme.colorScheme.primary,
                 ),
+
                 Container(
                   alignment: Alignment.topRight,
                   child: Container(
@@ -60,12 +54,12 @@ class AlbumCard extends StatelessWidget {
             ),
 
             Text(
-              _album,
+              _album.name,
               style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
             ),
 
             Text(
-              _artist,
+              _album.artistName ?? locale.app(.generic, "unknown"),
               style: TextStyle(
                 color: theme.colorScheme.secondary,
                 fontSize: 12,
@@ -77,26 +71,9 @@ class AlbumCard extends StatelessWidget {
     );
   }
 
-  Widget? _getImage(BuildContext context) {
-    if (_coverArtUri == null) {
-      return null;
-    }
-
-    if (_coverArtUri.isScheme("file")) {
-      return Image.file(
-        File.fromUri(_coverArtUri),
-        errorBuilder: (context, exception, stackTrace) => Container(),
-      );
-    }
-
-    return Image.network(
-      _coverArtUri.toString(),
-      errorBuilder: (context, exception, stackTrace) => Container(),
-    );
-  }
-
   Icon _getSourceIcon(Color color) {
-    switch (_sourceType) {
+    final source = AppState().getSource(_album.sourceId).type;
+    switch (source) {
       case SourceType.folder:
         return Icon(Icons.folder, size: 16, color: color);
       case SourceType.subsonic:

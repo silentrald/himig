@@ -5,20 +5,15 @@ import "package:himig/frontend/components/generic/overflow_text.dart";
 class SongItem extends StatelessWidget {
   final Song _song;
   final double _width;
-  final VoidCallback _onTap;
+  final VoidCallback? _onTap;
 
   final _padding = 16.0;
 
-  const SongItem({
-    super.key,
-    required this._song,
-    required this._width,
-    required this._onTap,
-  });
+  const SongItem(this._song, {super.key, required this._width, this._onTap});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: _onTap,
       child: Ink(
         padding: EdgeInsets.all(_padding),

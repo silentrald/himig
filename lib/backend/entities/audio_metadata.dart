@@ -5,7 +5,7 @@ class AudioMetadata {
   final String? album;
   final String? artist;
   final int? releaseYear;
-  final int? duration; // Seconds
+  final Duration? duration;
   final Uint8List? image;
 
   AudioMetadata({

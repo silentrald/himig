@@ -1,6 +1,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes, library_prefixes
 
 import "package:himig/backend/database/full/albums.dart";
+import "package:himig/backend/database/full/artists.dart";
 import "package:himig/backend/database/full/songs.dart";
 import "package:himig/backend/database/full/source.dart";
 import "package:himig/backend/database/version.dart";
@@ -23,7 +24,8 @@ Future<void> onCreateDatabase(Database database, int version) async {
 
   for (var table in [
     getCreateTableSources(),
-    getCreateTableAlbums(), // requires sources
+    getCreateTableArtists(),
+    getCreateTableAlbums(), // requires sources,artists
     getCreateTableSongs(), // requires sources,albums
   ]) {
     await database.execute(table);

@@ -29,12 +29,12 @@ class _AlbumPageState extends State<AlbumPage> {
 
   Future<void> _load() async {
     final result = await _albumUseCase.getSongsByAlbum(widget.album.id);
-    switch (result) {
-      case ResultOk(:var value):
-        setState(() => _songs = value);
-      case ResultError(:var error):
-        logger.error(error.toString());
+    if (result is ResultError) {
+      logger.error("Could not load songs ${result.error}");
+      return;
     }
+
+    setState(() => _songs = result.value);
   }
 
   Future<void> _cache() async {
@@ -119,7 +119,7 @@ class _AlbumPageState extends State<AlbumPage> {
   SongItem _buildSongItem(int index, double width) {
     final Song song = _songs[index];
     return SongItem(
-      song: song,
+      song,
       width: width,
       onTap: () => _onSongItemPressed(index, song),
     );

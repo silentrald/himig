@@ -3,8 +3,9 @@ import "package:himig/utils/result.dart";
 class Song {
   int id;
   final String title;
-  final String? album;
-  final String? artist;
+  final String? albumName;
+  final String? artistName;
+  // TODO: Convert this to Duration
   final int duration; // In seconds
 
   /// For remote source - id
@@ -20,27 +21,26 @@ class Song {
   final Uri? coverArtUri;
 
   /// Reference to the [Album] entity
-  final int? albumId;
+  final int albumId;
+  final int artistId;
 
   Song({
     this.id = 0,
     required this.title,
-    required this.album,
-    required this.artist,
+    this.albumName,
+    this.artistName,
     required this.duration,
     required this.reference,
 
     this.releaseYear,
-    int? localSourceId,
-    Uri? localUri,
-    int? remoteSourceId,
-    Uri? remoteUri,
+    this._localSourceId,
+    this._localUri,
+    this._remoteSourceId,
+    this._remoteUri,
     this.coverArtUri,
-    this.albumId,
-  }) : _localSourceId = localSourceId,
-       _localUri = localUri,
-       _remoteSourceId = remoteSourceId,
-       _remoteUri = remoteUri;
+    required this.albumId,
+    required this.artistId,
+  });
 
   static String? validatePair(int? sourceId, Uri? uri, bool local) {
     if ((sourceId == null) ^ (uri == null)) {
@@ -69,8 +69,8 @@ class Song {
   static Result<Song> create({
     int id = 0,
     required String title,
-    required String? album,
-    required String? artist,
+    String? albumName,
+    String? artistName,
     required int duration,
     required String reference,
     int? releaseYear,
@@ -79,7 +79,8 @@ class Song {
     int? remoteSourceId,
     Uri? remoteUri,
     Uri? coverArtUri,
-    int? albumId,
+    required int albumId,
+    required int artistId,
   }) {
     final List<String> errors = [
       ?validatePair(localSourceId, localUri, true),
@@ -94,8 +95,8 @@ class Song {
       Song(
         id: id,
         title: title,
-        album: album,
-        artist: artist,
+        albumName: albumName,
+        artistName: artistName,
         duration: duration,
         reference: reference,
         releaseYear: releaseYear,
@@ -105,6 +106,7 @@ class Song {
         remoteUri: remoteUri,
         coverArtUri: coverArtUri,
         albumId: albumId,
+        artistId: artistId,
       ),
     );
   }

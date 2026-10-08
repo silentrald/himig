@@ -1,6 +1,10 @@
 generic:
   add: 追加
   address: 住所
+  album: アルバム
+  albums: アルバム
+  artist: アーティスト
+  artists: アーティスト
   back: 戻る
   cache: キャッシュ
   create: 作成する

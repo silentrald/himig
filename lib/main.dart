@@ -6,7 +6,9 @@ import "package:himig/constant.dart" as constant;
 import "package:himig/frontend/components/now_playing_bar.dart";
 import "package:himig/frontend/controllers/locale.dart";
 import "package:himig/frontend/pages/album_page.dart";
+import "package:himig/frontend/pages/artist_page.dart";
 import "package:himig/frontend/pages/home_page.dart";
+import "package:himig/frontend/pages/now_playing.dart";
 import "package:himig/frontend/pages/settings_page.dart";
 import "package:himig/inject.dart" as inject;
 import "package:himig/locales/app_localizations.dart";
@@ -33,8 +35,10 @@ class HimigApp extends StatefulWidget {
 
 class _HimigAppState extends State<HimigApp> {
   final _playerService = inject.getInject<PlayerService>();
+  final _barHeight = 50.0 + 16.0;
+
+  bool _showNowPlayingPage = false;
   SimpleSong? _song;
-  final _barHeight = 100.0 + 16.0;
 
   late void Function() _changeSongOnEnd;
 
@@ -45,7 +49,6 @@ class _HimigAppState extends State<HimigApp> {
 
     _changeSongOnEnd = _playerService.onSongChanged((song) {
       setState(() => _song = song);
-      print("Changed to ${song.title} ${song.artist}");
     });
   }
 
@@ -68,7 +71,7 @@ class _HimigAppState extends State<HimigApp> {
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.red)),
       onGenerateRoute: (settings) =>
           _getRoute(settings, widget.localeController),
-      home: HomePage(localeController: widget.localeController),
+      initialRoute: "/home",
       builder: _getBuilder,
 
       locale: widget.localeController.locale,
@@ -97,21 +100,30 @@ class _HimigAppState extends State<HimigApp> {
   }
 
   Widget _getBuilder(BuildContext context, Widget? child) {
+    // TODO: try to override the back button here
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
-        children: <Widget>[
-          Container(
-            margin: EdgeInsets.only(
-              bottom: _song == null ? 8.0 : _barHeight + 8.0,
-            ),
-            child: Align(alignment: Alignment.topCenter, child: child),
-          ),
+        children: _showNowPlayingPage
+            ? [NowPlayingPage(song: _song!)]
+            : [
+                Container(
+                  margin: EdgeInsets.only(
+                    bottom: _song == null ? 8.0 : _barHeight + 8.0,
+                  ),
+                  child: Align(alignment: Alignment.topCenter, child: child),
+                ),
 
-          ?(_song != null
-              ? NowPlayingBar(height: _barHeight, song: _song!)
-              : null),
-        ],
+                ?((_song != null)
+                    ? NowPlayingBar(
+                        height: _barHeight,
+                        song: _song!,
+                        onSongInfoPressed: () {
+                          setState(() => _showNowPlayingPage = true);
+                        },
+                      )
+                    : null),
+              ],
       ),
     );
   }
@@ -135,6 +147,8 @@ class _HimigAppState extends State<HimigApp> {
           settings,
           SettingsPage(localeController: localeController),
         );
+      case "/artist":
+        return _buildRoute(settings, ArtistPage(artist: arguments["artist"]));
       default:
         return null;
     }

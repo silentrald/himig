@@ -1,6 +1,7 @@
 import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 import "package:sqflite/sqflite.dart";
+
 // ignore: implementation_imports
 // import "package:sqflite_common_ffi/src/sqflite_ffi_exception.dart";
 
@@ -34,26 +35,26 @@ class SqfliteRepoClient extends RepoClient {
   FutureResult<int> insert(String table, Map<String, dynamic> values) async {
     try {
       return Result.ok(await _client.insert(table, values));
-    // NOTE: Hide implementation for now, if only needed
-    //} on SqfliteFfiException catch (error, stackTrace) {
-    //  if (!error.isUniqueConstraintError()) {
-    //    return Result.errorWithStackTrace(error, stackTrace);
-    //  }
-    //
-    //  final constraintInfo = error.message!
-    //      .substring(
-    //        constraintMessageIndex,
-    //        error.message!.indexOf(",", constraintMessageIndex),
-    //      )
-    //      .split(".");
-    //  return Result.errorWithStackTrace(
-    //    TODO: Replace the error here
-    //    ProjectError(
-    //      .repoUniqueConstraint,
-    //      arguments: {"table": constraintInfo[0], "name": constraintInfo[1]},
-    //    ),
-    //    stackTrace,
-    //  );
+      // NOTE: Hide implementation for now, if only needed
+      //} on SqfliteFfiException catch (error, stackTrace) {
+      //  if (!error.isUniqueConstraintError()) {
+      //    return Result.errorWithStackTrace(error, stackTrace);
+      //  }
+      //
+      //  final constraintInfo = error.message!
+      //      .substring(
+      //        constraintMessageIndex,
+      //        error.message!.indexOf(",", constraintMessageIndex),
+      //      )
+      //      .split(".");
+      //  return Result.errorWithStackTrace(
+      //    TODO: Replace the error here
+      //    ProjectError(
+      //      .repoUniqueConstraint,
+      //      arguments: {"table": constraintInfo[0], "name": constraintInfo[1]},
+      //    ),
+      //    stackTrace,
+      //  );
     } on Exception catch (error, stackTrace) {
       return Result.errorWithStackTrace(error, stackTrace);
     }

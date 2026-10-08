@@ -26,8 +26,26 @@ class _SettingsPageState extends State<SettingsPage> {
   SourceType _sourceType = SourceType.folder;
 
   Future<void> _addSource(Source source) async {
-    await _settingUseCase.addSource(source);
+    final result = await _settingUseCase.addSource(source);
+    if (result is ResultError) {
+      logger.error("Could not add source", error: result.error);
+      return;
+    }
+
+    logger.info("Added source `${source.name}-${source.type.name}`");
     setState(() => _showForm = false);
+  }
+
+  Future<void> _deleteSource(Source source) async {
+    // TODO:
+    //final result = await _settingUseCase.deleteSource(source);
+    //if (result is ResultError) {
+    //  logger.error("Could not delete source", error: result.error);
+    //  return;
+    //}
+    //
+    //logger.info("Deleted source `${source.name}-${source.type.name}`");
+    //setState(() => _showForm = false);
   }
 
   Future<void> _editSource(Source source) async {
@@ -49,31 +67,35 @@ class _SettingsPageState extends State<SettingsPage> {
     final locale = AppLocalizations.of(context)!;
 
     return SafeArea(
-      child: Column(
-        children: [
-          ...AppState().sourceList.map((source) => _buildItem(locale, source)),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            ...AppState().sourceList.map(
+              (source) => _buildItem(locale, source),
+            ),
 
-          _showForm
-              ? _buildForm(context)
-              : FilledButton(
-                  onPressed: () => setState(() => _showForm = true),
-                  child: Text(locale.app(.generic, "add")),
-                ),
+            _showForm
+                ? _buildForm(context)
+                : FilledButton(
+                    onPressed: () => setState(() => _showForm = true),
+                    child: Text(locale.app(.generic, "add")),
+                  ),
 
-          FilledButton(
-            onPressed: _scanAlbums,
-            child: Text(locale.app(.generic, "scan")),
-          ),
+            FilledButton(
+              onPressed: _scanAlbums,
+              child: Text(locale.app(.generic, "scan")),
+            ),
 
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(locale.app(.generic, "back")),
-          ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(locale.app(.generic, "back")),
+            ),
 
-          _buildLanguageDropdown(),
-        ],
+            _buildLanguageDropdown(),
+          ],
+        ),
       ),
     );
   }
@@ -120,9 +142,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final form = switch (_sourceType) {
       SourceType.folder => FolderSourceForm(
         onAccept: (source) => _addSource(source),
+        onCancel: (source) => _deleteSource(source),
       ),
       SourceType.subsonic => SubsonicSourceForm(
         onAccept: (source) => _addSource(source),
+        onCancel: (source) => _deleteSource(source),
       ),
     };
 

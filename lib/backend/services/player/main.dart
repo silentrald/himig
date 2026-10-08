@@ -53,8 +53,8 @@ class MainPlayerService extends PlayerService {
       MediaItem(
         id: song.uri.toString(),
         title: song.title,
-        album: song.album,
-        artist: song.artist,
+        album: song.albumName,
+        artist: song.artistName,
         duration: Duration(seconds: song.duration),
         artUri: song.coverArtUri,
       ),

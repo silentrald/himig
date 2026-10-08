@@ -3,7 +3,8 @@ enum AlbumSort { recentlyAdded, releaseYear }
 class Album {
   int id;
   final String name;
-  final String? artist;
+  final int artistId;
+  final String? artistName;
   final int sourceId;
 
   /// For remote source - id
@@ -16,10 +17,31 @@ class Album {
   Album({
     this.id = 0,
     required this.name,
-    this.artist,
+    this.artistId = 0,
+    this.artistName,
     required this.sourceId,
     required this.reference,
     this.releaseYear,
     this.coverArtUri,
   });
+
+  Album copyWith({
+    int? id,
+    String? name,
+    int? artistId,
+    String? artistName,
+    int? sourceId,
+    String? reference,
+    int? releaseYear,
+    Uri? coverArtUri,
+  }) => Album(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    artistId: artistId ?? this.artistId,
+    artistName: artistName ?? this.artistName,
+    sourceId: sourceId ?? this.sourceId,
+    reference: reference ?? this.reference,
+    releaseYear: releaseYear ?? this.releaseYear,
+    coverArtUri: coverArtUri ?? this.coverArtUri,
+  );
 }

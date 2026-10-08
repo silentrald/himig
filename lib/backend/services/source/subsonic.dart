@@ -1,7 +1,9 @@
 import "package:himig/backend/entities/album.dart";
+import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/entities/source.dart";
 import "package:himig/backend/repos/album/types.dart";
+import "package:himig/backend/repos/artist/types.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/services/fetch/types.dart";
@@ -9,19 +11,20 @@ import "package:himig/backend/services/source/types.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
+// TODO: Collision checking
 class SubsonicSourceImplementation
     extends SourceImplementation<SubsonicSource> {
   final AlbumRepo _albumRepo;
+  final ArtistRepo _artistRepo;
   final SongRepo _songRepo;
   final FetchService _fetchService;
 
   SubsonicSourceImplementation({
-    required AlbumRepo albumRepo,
-    required SongRepo songRepo,
-    required FetchService fetchService,
-  }) : _albumRepo = albumRepo,
-       _songRepo = songRepo,
-       _fetchService = fetchService;
+    required this._albumRepo,
+    required this._artistRepo,
+    required this._songRepo,
+    required this._fetchService,
+  });
 
   @override
   Future<Result<int>> scanSource(
@@ -50,11 +53,43 @@ class SubsonicSourceImplementation
       return Result.ok(0);
     }
 
+    final mapResult = await _artistRepo.getArtistMap(client);
+    if (mapResult is ResultError) {
+      return mapResult.toError();
+    }
+
+    final Map<String, int> artistMap = mapResult.value;
+    int? artistId;
+
     // TODO: Album/Song queuing, to do it in a background even if the app is closed
     for (final albumJson in albumList) {
+      final albumName = (albumJson["name"] ?? "unknown").trim();
+      final artistName = albumJson["artist"];
+
+      artistId = artistMap[artistName];
+      if (artistId == null) {
+        final artistResult = await _artistRepo.insertArtist(
+          client,
+          Artist(
+            name: artistName,
+            imageUri: source.getUri("/rest/getCoverArt", {
+              "id": albumJson["parent"],
+            }),
+          ),
+        );
+        if (artistResult is ResultError) {
+          // TODO: if album fails to be inserted, create a fail queue
+          logger.warn("Skipping $albumName. Reason ${artistResult.error}");
+          continue;
+        }
+
+        artistId = artistResult.value.id;
+        artistMap[artistName] = artistId;
+      }
+
       final album = Album(
-        name: albumJson["name"],
-        artist: albumJson["artist"],
+        name: albumName,
+        artistId: artistId,
         sourceId: source.id,
         reference: albumJson["id"],
         releaseYear: albumJson["year"],
@@ -69,7 +104,7 @@ class SubsonicSourceImplementation
           logger.info("Inserted ${album.name} with songs");
         case ResultError(:var error):
           // TODO: if album fails to be inserted, create a fail queue
-          logger.warn("Skipping ${album.name}. Reason ${error.toString()}");
+          logger.warn("Skipping $albumName. Reason $error");
       }
     }
 
@@ -105,8 +140,6 @@ class SubsonicSourceImplementation
       final id = song["id"];
       final createResult = Song.create(
         title: song["title"],
-        album: album.name,
-        artist: song["artist"],
         duration: song["duration"],
         reference: id,
         releaseYear: song["year"],
@@ -116,6 +149,7 @@ class SubsonicSourceImplementation
           "id": song["coverArt"],
         }),
         albumId: album.id,
+        artistId: album.artistId,
       );
       if (createResult is ResultError) {
         logger.warn(

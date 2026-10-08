@@ -3,14 +3,18 @@ import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 
 abstract class AlbumRepo {
-  Future<Result<List<Album>>> getAlbumList(
+  FutureResult<List<Album>> getAlbumList(
     RepoClient client, {
     int page = 1,
     int count = 20,
     AlbumSort sort = AlbumSort.recentlyAdded,
   });
+  FutureResult<List<Album>> getAlbumListByArtist(
+    RepoClient client,
+    int artistId,
+  );
 
-  Future<Result<Album>> insertAlbum(RepoClient client, Album album);
+  FutureResult<Album> insertAlbum(RepoClient client, Album album);
 
-  Future<Result<int>> deleteAllAlbums(RepoClient client);
+  FutureResult<int> deleteAllAlbums(RepoClient client);
 }

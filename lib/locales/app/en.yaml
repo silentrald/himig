@@ -1,6 +1,10 @@
 generic:
   add: Add
   address: Address
+  album: Album
+  albums: Albums
+  artist: Artist
+  artists: Artists
   back: Back
   cache: Cache
   create: Create

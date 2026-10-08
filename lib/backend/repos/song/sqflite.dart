@@ -4,6 +4,8 @@ import "package:himig/backend/repos/song/types.dart";
 import "package:himig/utils/result.dart";
 
 class SqfliteSongRepo extends SongRepo {
+  static const _tableName = "songs";
+
   Song _rowToSong(Map row) {
     final localUri = row["local_uri"];
     final remoteUri = row["remote_uri"];
@@ -11,8 +13,8 @@ class SqfliteSongRepo extends SongRepo {
     return Song(
       id: row["id"],
       title: row["title"],
-      album: row["album"],
-      artist: row["artist"],
+      albumName: row["album_name"],
+      artistName: row["artist_name"],
       duration: row["duration"],
       reference: row["reference"],
       releaseYear: row["release_year"],
@@ -22,52 +24,85 @@ class SqfliteSongRepo extends SongRepo {
       remoteUri: remoteUri == null ? null : Uri.parse(remoteUri),
       coverArtUri: remoteUri == null ? null : Uri.parse(coverArtUri),
       albumId: row["album_id"],
+      artistId: row["artist_id"],
     );
   }
 
+  FutureResult<List<Song>> _getSongListHelper(
+    RepoClient client,
+    String query,
+    List<dynamic> arguments,
+  ) async {
+    final result = await client.select(query, arguments);
+    if (result is ResultError) {
+      return result.toError();
+    }
+
+    return Result.ok(result.value.map(_rowToSong).toList());
+  }
+
   @override
-  Future<Result<List<Song>>> getSongList(
+  FutureResult<List<Song>> getSongList(
     RepoClient client, {
     int page = 1,
     int count = 20,
-  }) async {
-    final result = await client.select("SELECT * FROM songs limit ?, ?", [
-      count * (page - 1),
-      count,
-    ]);
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        return Result.ok(value.map(_rowToSong).toList());
-    }
-  }
-
-  @override
-  Future<Result<List<Song>>> getSongsByAlbum(
-    RepoClient client,
-    int albumId,
-  ) async {
-    final result = await client.select(
-      "SELECT * FROM songs where album_id = ?",
-      [albumId],
-    );
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        return Result.ok(value.map(_rowToSong).toList());
-    }
-  }
+  }) => _getSongListHelper(
+    client,
+    """
+SELECT *,
+  s.id as id,
+  al.name as album_name,
+  ar.name as artist_name
+FROM songs s
+  LEFT JOIN albums al ON al.id = s.album_id
+  LEFT JOIN artists ar ON ar.id = s.artist_id
+ORDER BY s.name
+LIMIT ?, ?
+"""
+        .trim(),
+    [count * (page - 1), count],
+  );
 
   @override
-  Future<Result<Song>> insertSong(RepoClient client, Song song) async {
-    final result = await client.insert("songs", {
+  FutureResult<List<Song>> getSongsByAlbum(RepoClient client, int albumId) =>
+      _getSongListHelper(
+        client,
+        """
+SELECT *,
+  s.id as id,
+  al.name as album_name,
+  ar.name as artist_name
+FROM songs s
+  LEFT JOIN albums al ON al.id = s.album_id
+  LEFT JOIN artists ar ON ar.id = s.artist_id
+WHERE s.album_id = ?
+      """
+            .trim(),
+        [albumId],
+      );
+
+  @override
+  FutureResult<List<Song>> getSongsByArtist(RepoClient client, int artistId) =>
+      _getSongListHelper(
+        client,
+        """
+SELECT *,
+  s.id as id,
+  al.name as album_name,
+  ar.name as artist_name
+FROM songs s
+  LEFT JOIN albums al ON al.id = s.album_id
+  LEFT JOIN artists ar ON ar.id = s.artist_id
+WHERE s.artist_id = ?
+    """
+            .trim(),
+        [artistId],
+      );
+
+  @override
+  FutureResult<Song> insertSong(RepoClient client, Song song) async {
+    final result = await client.insert(_tableName, {
       "title": song.title,
-      "album": song.album,
-      "artist": song.artist,
       "duration": song.duration,
       "reference": song.reference,
       "release_year": song.releaseYear,
@@ -77,6 +112,7 @@ class SqfliteSongRepo extends SongRepo {
       "remote_uri": song.remoteUri?.toString(),
       "cover_art_uri": song.coverArtUri?.toString(),
       "album_id": song.albumId,
+      "artist_id": song.artistId,
     });
 
     switch (result) {
@@ -94,13 +130,11 @@ class SqfliteSongRepo extends SongRepo {
   }
 
   @override
-  Future<Result<Song>> updateSong(RepoClient client, Song song) async {
+  FutureResult<Song> updateSong(RepoClient client, Song song) async {
     final result = await client.update(
-      "songs",
+      _tableName,
       {
         "title": song.title,
-        "album": song.album,
-        "artist": song.artist,
         "duration": song.duration,
         "reference": song.reference,
         "release_year": song.releaseYear,
@@ -110,6 +144,7 @@ class SqfliteSongRepo extends SongRepo {
         "remote_uri": song.remoteUri?.toString(),
         "cover_art_uri": song.coverArtUri?.toString(),
         "album_id": song.albumId,
+        "artist_id": song.artistId,
       },
       {"id": song.id},
     );
@@ -128,7 +163,7 @@ class SqfliteSongRepo extends SongRepo {
   }
 
   @override
-  Future<Result<int>> deleteAllSongs(RepoClient client) async {
-    return await client.delete("songs");
+  FutureResult<int> deleteAllSongs(RepoClient client) async {
+    return await client.delete(_tableName);
   }
 }

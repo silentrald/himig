@@ -4,67 +4,99 @@ import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 
 class SqfliteAlbumRepo extends AlbumRepo {
+  static const _tableName = "albums";
+
+  Album _rowToAlbum(Map row) {
+    final coverArtUri = row["cover_art_uri"];
+    return Album(
+      id: row["id"],
+      name: row["name"],
+      artistId: row["artist_id"],
+      artistName: row["artist_name"],
+      sourceId: row["source_id"],
+      reference: row["reference"],
+      releaseYear: row["release_year"],
+      coverArtUri: coverArtUri == null ? null : Uri.parse(coverArtUri),
+    );
+  }
+
+  FutureResult<List<Album>> _getAlbumListHelper(
+    RepoClient client,
+    String query,
+    List<dynamic> arguments,
+  ) async {
+    final result = await client.select(query, arguments);
+
+    if (result is ResultError) {
+      return result.toError();
+    }
+
+    return Result.ok(result.value.map(_rowToAlbum).toList());
+  }
+
   @override
-  Future<Result<List<Album>>> getAlbumList(
+  FutureResult<List<Album>> getAlbumList(
     RepoClient client, {
     int page = 1,
     int count = 20,
     AlbumSort sort = AlbumSort.recentlyAdded,
     RepoClient? transaction,
-  }) async {
-    final result = await client.select(
-      "SELECT * FROM albums order by name limit ?, ?",
-      [count * (page - 1), count],
-    );
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        return Result.ok(
-          value.map((r) {
-            final coverArtUri = r["cover_art_uri"];
-            return Album(
-              id: r["id"],
-              name: r["name"],
-              artist: r["artist"],
-              sourceId: r["source_id"],
-              reference: r["reference"],
-              releaseYear: r["release_year"],
-              coverArtUri: coverArtUri == null ? null : Uri.parse(coverArtUri),
-            );
-          }).toList(),
-        );
-    }
-  }
+  }) => _getAlbumListHelper(
+    client,
+    """
+SELECT *,
+  al.id as id,
+  al.name as name,
+  ar.name as artist_name
+FROM albums al
+JOIN artists ar ON al.artist_id = ar.id
+ORDER BY name LIMIT ?, ?
+      """
+        .trim(),
+    [count * (page - 1), count],
+  );
 
   @override
-  Future<Result<Album>> insertAlbum(RepoClient client, Album album) async {
-    final result = await client.insert("albums", {
+  FutureResult<List<Album>> getAlbumListByArtist(
+    RepoClient client,
+    int artistId,
+  ) => _getAlbumListHelper(
+    client,
+    """
+SELECT *,
+  (SELECT name FROM artists WHERE id = ?) as artist_name
+FROM albums
+WHERE artist_id = ?
+ORDER BY release_year DESC, name
+      """
+        .trim(),
+    [artistId, artistId],
+  );
+
+  @override
+  FutureResult<Album> insertAlbum(RepoClient client, Album album) async {
+    final result = await client.insert(_tableName, {
       "name": album.name,
-      "artist": album.artist,
+      "artist_id": album.artistId,
       "reference": album.reference,
       "release_year": album.releaseYear,
       "source_id": album.sourceId,
       "cover_art_uri": album.coverArtUri?.toString(),
     });
 
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        if (value == 0) {
-          return Result.error(Exception("Album was not inserted"));
-        }
-        album.id = value;
+    if (result is ResultError) {
+      return result.toError();
     }
 
-    return Result.ok(album);
+    if (result.value == 0) {
+      return Result.error(Exception("Album was not inserted"));
+    }
+
+    return Result.ok(album.copyWith(id: result.value));
   }
 
   @override
-  Future<Result<int>> deleteAllAlbums(RepoClient client) async {
-    return await client.delete("albums");
+  FutureResult<int> deleteAllAlbums(RepoClient client) async {
+    return await client.delete(_tableName);
   }
 }
