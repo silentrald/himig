@@ -7,6 +7,9 @@ String buildNumber = "unknown";
 
 const int databaseVersion = 1;
 
+// in ms
+const int scanningInterval = 3000;
+
 Future<void> setup() async {
   final packageInfo = await PackageInfo.fromPlatform();
 

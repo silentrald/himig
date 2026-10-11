@@ -123,7 +123,7 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
             Album(
               name: albumName,
               artistId: artistId,
-              sourceId: source.id,
+              localSourceId: source.id,
               reference: file.parent.path,
               releaseYear: metadata.releaseYear,
               coverArtUri: coverArtUri,
@@ -179,4 +179,7 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
       ),
     );
   }
+
+  @override
+  FutureResult<bool> isConnected(FolderSource source) async => Result.ok(true);
 }

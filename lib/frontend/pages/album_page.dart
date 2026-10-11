@@ -54,11 +54,9 @@ class _AlbumPageState extends State<AlbumPage> {
     _load();
   }
 
-  Future<void> _onSongItemPressed(int index, Song song) async {
+  Future<void> _onSongItemPressed(int index) async {
     await _playerService.clearQueue();
-    for (final queueSong in _songs) {
-      await _playerService.addSong(queueSong);
-    }
+    await _playerService.addSongList(_songs);
     await _playerService.skip(index);
     await _playerService.play();
   }
@@ -118,10 +116,6 @@ class _AlbumPageState extends State<AlbumPage> {
 
   SongItem _buildSongItem(int index, double width) {
     final Song song = _songs[index];
-    return SongItem(
-      song,
-      width: width,
-      onTap: () => _onSongItemPressed(index, song),
-    );
+    return SongItem(song, width: width, onTap: () => _onSongItemPressed(index));
   }
 }

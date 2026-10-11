@@ -8,6 +8,7 @@ import "package:himig/backend/use_cases/artist/types.dart";
 import "package:himig/frontend/components/generic/uri_image.dart";
 import "package:himig/frontend/components/song/song_item.dart";
 import "package:himig/inject.dart";
+import "package:himig/locales/app_localizations.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
@@ -48,33 +49,31 @@ class _ArtistPageState extends State<ArtistPage> {
   }
 
   Future<void> _onSongItemPressed(Song selectedSong) async {
-    await _playerService.clearQueue();
-
-    int songIndex = -1;
-    int index = 0;
-    for (final albumSong in _albumSongs) {
-      for (final song in albumSong.songs) {
-        if (selectedSong.id == song.id && songIndex == -1) {
-          songIndex = index;
-        }
-
-        await _playerService.addSong(song);
-        ++index;
-      }
+    final songs = _albumSongs
+        .map((v) => v.songs)
+        .fold<List<Song>>([], (previous, element) => previous..addAll(element));
+    final index = songs.indexWhere((song) => song.id == selectedSong.id);
+    if (index == -1) {
+      logger.error("Could not find `${selectedSong.title}` song");
+      return;
     }
 
-    await _playerService.skip(songIndex);
+    await _playerService.clearQueue();
+    await _playerService.addSongList(songs);
+    await _playerService.skip(index);
     await _playerService.play();
   }
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return SingleChildScrollView(
       child: Column(
         children: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Back"),
+            child: Text(locale.app(.generic, "back")),
           ),
 
           SizedBox(height: 8.0),

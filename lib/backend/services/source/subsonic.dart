@@ -90,7 +90,7 @@ class SubsonicSourceImplementation
       final album = Album(
         name: albumName,
         artistId: artistId,
-        sourceId: source.id,
+        remoteSourceId: source.id,
         reference: albumJson["id"],
         releaseYear: albumJson["year"],
         coverArtUri: source.getUri("/rest/getCoverArt", {
@@ -175,5 +175,17 @@ class SubsonicSourceImplementation
   @override
   Uri? getLocalSongUri(SubsonicSource source, Song song) {
     return null;
+  }
+
+  @override
+  FutureResult<bool> isConnected(SubsonicSource source) async {
+    final request = FetchRequest(source.getUri("/rest/ping", {"f": "json"}));
+    final pingResult = await _fetchService.getJson(request);
+    if (pingResult is ResultError) {
+      return Result.ok(false);
+    }
+
+    final status = pingResult.value.data?["subsonic-response"]["status"];
+    return Result.ok(status == "ok");
   }
 }

@@ -11,6 +11,8 @@ generic:
   delete: 削除
   name: 名前
   none: なし
+  offline: オフライン
+  online: オンライン
   path: パス
   password: パスワード
   refresh: リフレッシュ

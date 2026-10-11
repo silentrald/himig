@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/services/background/main.dart";
 import "package:himig/backend/services/player/types.dart";
 import "package:himig/constant.dart" as constant;
 import "package:himig/frontend/components/now_playing_bar.dart";
@@ -14,7 +15,10 @@ import "package:himig/inject.dart" as inject;
 import "package:himig/locales/app_localizations.dart";
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await inject.setup();
+  await initializeBackgroundService();
 
   final localeController = LocaleController();
   await localeController.initialize();

@@ -26,12 +26,17 @@ class MainSourceService extends SourceService {
   }
 
   @override
-  Future<Result<int>> scanSource(Source source, RepoClient client) {
+  FutureResult<int> scanSource(Source source, RepoClient client) {
     return _getImplementation(source).scanSource(source, client);
   }
 
   @override
   Uri? getLocalSongUri(Source source, Song song) {
     return _getImplementation(source).getLocalSongUri(source, song);
+  }
+
+  @override
+  FutureResult<bool> isConnected(Source source) {
+    return _getImplementation(source).isConnected(source);
   }
 }

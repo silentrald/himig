@@ -11,6 +11,8 @@ generic:
   delete: Delete
   name: Name
   none: None
+  offline: Offline
+  online: Online
   path: Path
   password: Password
   refresh: Refresh

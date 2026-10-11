@@ -13,7 +13,8 @@ class SqfliteAlbumRepo extends AlbumRepo {
       name: row["name"],
       artistId: row["artist_id"],
       artistName: row["artist_name"],
-      sourceId: row["source_id"],
+      localSourceId: row["local_source_id"],
+      remoteSourceId: row["remote_source_id"],
       reference: row["reference"],
       releaseYear: row["release_year"],
       coverArtUri: coverArtUri == null ? null : Uri.parse(coverArtUri),
@@ -80,7 +81,8 @@ ORDER BY release_year DESC, name
       "artist_id": album.artistId,
       "reference": album.reference,
       "release_year": album.releaseYear,
-      "source_id": album.sourceId,
+      "local_source_id": album.localSourceId,
+      "remote_source_id": album.remoteSourceId,
       "cover_art_uri": album.coverArtUri?.toString(),
     });
 

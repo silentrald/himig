@@ -53,6 +53,7 @@ abstract class PlayerService {
   Future<void> setRepeat(PlayerRepeat repeat);
 
   Future<void> addSong(Song song);
+  Future<void> addSongList(List<Song> songs);
   Future<void> clearQueue();
 
   // Events

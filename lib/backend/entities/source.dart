@@ -32,14 +32,11 @@ class FolderSource extends Source {
   bool _writeable;
 
   FolderSource({
-    int id = 0,
-    required String name,
-    required String path,
-    required bool writeable,
-  }) : _id = id,
-       _name = name,
-       _path = path,
-       _writeable = writeable;
+    this._id = 0,
+    required this._name,
+    required this._path,
+    required this._writeable,
+  });
 
   factory FolderSource.fromRepo(
     int id,
@@ -247,7 +244,7 @@ class SubsonicSource extends Source {
     );
   }
 
-  Uri getUri(String path, Map<String, String> parameters) =>
+  Uri getUri(String path, [Map<String, String> parameters = const {}]) =>
       (_https ? Uri.https : Uri.http)(_host, path, {
         ...parameters,
         "u": _username,

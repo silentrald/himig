@@ -1,6 +1,10 @@
+import "dart:convert";
+
 import "package:flutter/material.dart";
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/entities/artist.dart";
+import "package:himig/backend/services/background/types.dart";
+import "package:himig/backend/services/connection/types.dart";
 import "package:himig/backend/use_cases/home/types.dart";
 import "package:himig/frontend/components/cards/album_card.dart";
 import "package:himig/frontend/components/cards/artist_card.dart";
@@ -20,6 +24,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _homeUseCase = getInject<HomeUseCase>();
+  final _backgroundService = getInject<BackgroundService>();
+  final _connectionService = getInject<ConnectionService>();
 
   final _albumController = ScrollController();
   int _albumPage = 1;
@@ -30,6 +36,12 @@ class _HomePageState extends State<HomePage> {
   final List<Artist> _artists = [];
 
   final _sectionHeight = 300.0;
+
+  final Map<int, bool> _connectedSources = {};
+  void Function()? _sourcesListener;
+
+  bool _connected = true;
+  void Function()? _connectivityListener;
 
   void _load() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -52,6 +64,8 @@ class _HomePageState extends State<HomePage> {
         logger.error("Could not get artist list", error: artistResult.error);
         return;
       }
+
+      // TODO: get the _connectedSources data here
 
       setState(() {
         _albums.addAll(albumResult.value);
@@ -119,12 +133,29 @@ class _HomePageState extends State<HomePage> {
         setState(() => _artists.addAll(newArtists));
       }
     });
+
+    _sourcesListener = _backgroundService.listen(
+      "listen",
+      (data) => setState(
+        () => (jsonDecode(data?["data"]) as Map<String, dynamic>).forEach(
+          (key, value) => _connectedSources[int.parse(key)] = value,
+        ),
+      ),
+    );
+
+    _connectivityListener = _connectionService.onConnectionChange(
+      (connected) => setState(() => _connected = connected),
+    );
+
     _load();
   }
 
   @override
   void dispose() {
-    widget._localeController.addListener(_onLocaleChange);
+    // TODO: does not cleanup on app exit, check this out
+    widget._localeController.removeListener(_onLocaleChange);
+    _sourcesListener?.call();
+    _connectivityListener?.call();
     super.dispose();
   }
 
@@ -149,8 +180,21 @@ class _HomePageState extends State<HomePage> {
     return SafeArea(
       child: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: .start,
           children: [
+            Row(
+              mainAxisAlignment: .end,
+              children: [
+                Text(locale.app(.generic, _connected ? "online" : "offline")),
+
+                IconButton(onPressed: () => _load(), icon: Icon(Icons.refresh)),
+                IconButton(
+                  onPressed: () => Navigator.pushNamed(context, "/settings"),
+                  icon: Icon(Icons.settings),
+                ),
+              ],
+            ),
+
             Text(locale.app(.generic, "albums")),
 
             _buildAlbums(locale),
@@ -158,16 +202,6 @@ class _HomePageState extends State<HomePage> {
             Text(locale.app(.generic, "artists")),
 
             _buildArtists(locale),
-
-            TextButton(
-              onPressed: () => Navigator.pushNamed(context, "/settings"),
-              child: Text(locale.app(.generic, "settings")),
-            ),
-
-            TextButton(
-              onPressed: () => _load(),
-              child: Text(locale.app(.generic, "refresh")),
-            ),
           ],
         ),
       ),
@@ -175,16 +209,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAlbums(AppLocalizations locale) {
+    final filteredAlbums = _albums
+        .where(
+          (album) =>
+              (_connectedSources[album.sourceId] ?? true) &&
+              // Check if the album can be found locally
+              (_connected || album.localSourceId != null),
+        )
+        .toList();
+
     return SizedBox(
       height: _sectionHeight,
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         scrollDirection: Axis.horizontal,
-        itemCount: _albums.length,
+        itemCount: filteredAlbums.length,
         separatorBuilder: (_, _) => SizedBox(width: 16),
         itemBuilder: (context, index) => AlbumCard(
-          _albums[index],
-          onTap: () => _onAlbumCardPressed(_albums[index]),
+          filteredAlbums[index],
+          onTap: () => _onAlbumCardPressed(filteredAlbums[index]),
         ),
         controller: _albumController,
       ),

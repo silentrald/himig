@@ -1,4 +1,7 @@
+// ignore_for_file: avoid_print
+
 import "package:flutter/foundation.dart";
+import "package:intl/intl.dart";
 
 enum Level {
   fatal(1),
@@ -15,6 +18,9 @@ enum Level {
 }
 
 Level _level = Level.debug;
+
+final _dateFormat = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+String _getCurrentDateString() => _dateFormat.format(DateTime.now());
 
 void setLevel(Level level) => _level = level;
 
@@ -61,7 +67,7 @@ void debug(String message) {
 /* Development/Debug Implentation */
 
 void _fatalDev(String message) {
-  print("\x1B[31mFATAL\x1B[0m: $message");
+  print("${_getCurrentDateString()} \x1B[31mFATAL\x1B[0m: $message");
 }
 
 void _errorDev(String message, {Exception? error}) {
@@ -69,7 +75,7 @@ void _errorDev(String message, {Exception? error}) {
     return;
   }
 
-  print("\x1B[31mERROR\x1B[0m: $message");
+  print("${_getCurrentDateString()} \x1B[31mERROR\x1B[0m: $message");
   if (error != null) print(error);
 }
 
@@ -78,7 +84,7 @@ void _warnDev(String message) {
     return;
   }
 
-  print("\x1B[33mWARN\x1B[0m: $message");
+  print("${_getCurrentDateString()} \x1B[33mWARN\x1B[0m: $message");
 }
 
 void _infoDev(String message) {
@@ -86,7 +92,7 @@ void _infoDev(String message) {
     return;
   }
 
-  print("\x1B[32mINFO\x1B[0m: $message");
+  print("${_getCurrentDateString()} \x1B[32mINFO\x1B[0m: $message");
 }
 
 void _debugDev(String message) {
@@ -94,7 +100,7 @@ void _debugDev(String message) {
     return;
   }
 
-  print("\x1B[35mDEBUG\x1B[0m: $message");
+  print("${_getCurrentDateString()} \x1B[35mDEBUG\x1B[0m: $message");
 }
 
 /* Production Implementation */

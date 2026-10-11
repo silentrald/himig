@@ -142,11 +142,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final form = switch (_sourceType) {
       SourceType.folder => FolderSourceForm(
         onAccept: (source) => _addSource(source),
-        onCancel: (source) => _deleteSource(source),
+        //onCancel: (source) => _deleteSource(source),
       ),
       SourceType.subsonic => SubsonicSourceForm(
         onAccept: (source) => _addSource(source),
-        onCancel: (source) => _deleteSource(source),
+        //onCancel: (source) => _deleteSource(source),
       ),
     };
 

@@ -27,34 +27,42 @@ class SettingsUseCaseV1 extends SettingsUseCase {
     required this._sourceService,
   });
 
-  @override
-  Future<Result<void>> loadSources() async {
-    final result = await _sourceRepo.getAllSources(_database.client);
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        AppState().addSourceList(value);
-        return Result.ok(null);
+  Future<Result<void>> _validateSource(Source source) async {
+    final connectedResult = await _sourceService.isConnected(source);
+    if (connectedResult is ResultError) {
+      return connectedResult.toError();
     }
+
+    if (!connectedResult.value) {
+      return Result.error(Exception("Could not connect to ${source.name}"));
+    }
+
+    return Result.ok(null);
   }
 
   @override
   Future<Result<void>> addSource(Source source) async {
-    final result = await _sourceRepo.insertSource(_database.client, source);
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        AppState().addSource(value);
-        return Result.ok(null);
+    final validateResult = _validateSource(source);
+    if (validateResult is ResultError) {
+      return validateResult;
     }
+
+    final result = await _sourceRepo.insertSource(_database.client, source);
+    if (result is ResultError) {
+      return result.toError();
+    }
+
+    AppState().addSource(result.value);
+    return Result.ok(null);
   }
 
   @override
   Future<Result<void>> editSource(Source source) async {
+    final validateResult = _validateSource(source);
+    if (validateResult is ResultError) {
+      return validateResult;
+    }
+
     final result = await _sourceRepo.updateSource(_database.client, source);
     switch (result) {
       case ResultError(:var error):

@@ -48,22 +48,38 @@ class MainPlayerService extends PlayerService {
       });
 
   @override
-  Future<void> addSong(Song song) async {
-    await _audioHandler.addQueueItem(
-      MediaItem(
-        id: song.uri.toString(),
-        title: song.title,
-        album: song.albumName,
-        artist: song.artistName,
-        duration: Duration(seconds: song.duration),
-        artUri: song.coverArtUri,
-      ),
-    );
-  }
+  Future<void> addSong(Song song) => _audioHandler.addQueueItem(
+    MediaItem(
+      id: song.uri.toString(),
+      title: song.title,
+      album: song.albumName,
+      artist: song.artistName,
+      duration: Duration(seconds: song.duration),
+      artUri: song.coverArtUri,
+    ),
+  );
 
   @override
-  Future<void> clearQueue() async =>
-      (_audioHandler as _AudioPlayerHandler).player.clearAudioSources();
+  Future<void> addSongList(List<Song> songs) => _audioHandler.addQueueItems(
+    songs
+        .map(
+          (song) => MediaItem(
+            id: song.uri.toString(),
+            title: song.title,
+            album: song.albumName,
+            artist: song.artistName,
+            duration: Duration(seconds: song.duration),
+            artUri: song.coverArtUri,
+          ),
+        )
+        .toList(),
+  );
+
+  @override
+  Future<void> clearQueue() async {
+    await _audioHandler.pause();
+    await (_audioHandler as _AudioPlayerHandler).player.clearAudioSources();
+  }
 
   @override
   void Function() onSongChanged(ValueChanged<SimpleSong> callback) {
@@ -162,6 +178,14 @@ class _AudioPlayerHandler extends BaseAudioHandler {
   Future<void> addQueueItem(MediaItem mediaItem) => player.addAudioSource(
     AudioSource.uri(Uri.parse(mediaItem.id), tag: mediaItem),
   );
+
+  @override
+  Future<void> addQueueItems(List<MediaItem> mediaItems) =>
+      player.addAudioSources(
+        mediaItems
+            .map((mi) => AudioSource.uri(Uri.parse(mi.id), tag: mi))
+            .toList(),
+      );
 
   @override
   Future<void> removeQueueItemAt(int index) =>
