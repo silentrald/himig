@@ -5,6 +5,7 @@ import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/services/player/types.dart";
 import "package:himig/backend/use_cases/artist/types.dart";
+import "package:himig/frontend/components/cards/album_card.dart";
 import "package:himig/frontend/components/generic/uri_image.dart";
 import "package:himig/frontend/components/song/song_item.dart";
 import "package:himig/inject.dart";
@@ -25,7 +26,9 @@ class _ArtistPageState extends State<ArtistPage> {
   final _playerService = getInject<PlayerService>();
   final _artistUseCase = getInject<ArtistUseCase>();
 
+  final _artistImageSize = 48.0;
   final _trackImageSize = 64.0;
+  final _paddingSize = 8.0;
 
   final List<AlbumSongsDto> _albumSongs = [];
 
@@ -67,27 +70,40 @@ class _ArtistPageState extends State<ArtistPage> {
   @override
   Widget build(BuildContext context) {
     final locale = AppLocalizations.of(context)!;
+    final width = MediaQuery.of(context).size.width;
 
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          bottom: TabBar(
+            tabs: [
+              Tab(text: locale.app(.generic, "tracks")),
+              Tab(text: locale.app(.generic, "albums")),
+            ],
+          ),
+          title: Row(
+            spacing: 8.0,
+            children: [
+              UriImage(
+                widget.artist.imageUri,
+                width: _artistImageSize,
+                height: _artistImageSize,
+              ),
+              Text(widget.artist.name),
+            ],
+          ),
+          toolbarHeight: _artistImageSize + 2 * _paddingSize,
+        ),
+        body: TabBarView(children: [_buildTrackList(), _buildAlbumList(width)]),
+      ),
+    );
+  }
+
+  Widget _buildTrackList() {
     return SingleChildScrollView(
       child: Column(
-        children: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(locale.app(.generic, "back")),
-          ),
-
-          SizedBox(height: 8.0),
-
-          UriImage(widget.artist.imageUri),
-
-          SizedBox(height: 8.0),
-
-          Text(widget.artist.name),
-
-          SizedBox(height: 8.0),
-
-          ..._albumSongs.map((as) => _buildTrack(as)),
-        ],
+        children: _albumSongs.map((as) => _buildTrack(as)).toList(),
       ),
     );
   }
@@ -129,6 +145,33 @@ class _ArtistPageState extends State<ArtistPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAlbumList(double width) {
+    final count = width > 1024 ? 3 : 2;
+    final imageWidth = (width - (count + 1) * _paddingSize) / count;
+    final albums = _albumSongs
+        .map(
+          (as) => AlbumCard(
+            as.album,
+            imageSize: imageWidth,
+            showArtistText: false,
+            onTap: () => _onAlbumPressed(as.album),
+          ),
+        )
+        .toList();
+
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.all(_paddingSize),
+        child: Wrap(
+          spacing: _paddingSize,
+          runSpacing: _paddingSize,
+          direction: .horizontal,
+          children: albums,
+        ),
       ),
     );
   }

@@ -18,6 +18,7 @@ generic:
   refresh: Refresh
   scan: Scan
   settings: Settings
+  tracks: Tracks
   unknown: Unknown
   update: Update
   username: Username

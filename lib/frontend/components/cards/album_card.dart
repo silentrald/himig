@@ -8,15 +8,19 @@ import "package:himig/state.dart";
 class AlbumCard extends StatelessWidget {
   final double _imageSize;
   final double _iconSize;
+  final bool _showArtistText;
 
   final Album _album;
   final VoidCallback? _onTap;
+
+  final _iconPadding = 4.0;
 
   const AlbumCard(
     this._album, {
     super.key,
     this._imageSize = 160.0,
     this._iconSize = 24.0,
+    this._showArtistText = true,
     this._onTap,
   });
 
@@ -36,19 +40,23 @@ class AlbumCard extends StatelessWidget {
               children: [
                 UriImage(
                   _album.coverArtUri,
+                  width: _imageSize,
+                  height: _imageSize,
                   backgroundColor: theme.colorScheme.primary,
                 ),
 
                 Container(
-                  alignment: Alignment.topRight,
-                  child: Container(
-                    width: _iconSize,
-                    height: _iconSize,
-                    padding: EdgeInsets.all(4),
-                    margin: EdgeInsets.all(4),
-                    color: theme.colorScheme.onPrimary,
-                    child: _getSourceIcon(theme.colorScheme.primary),
+                  width: _iconSize,
+                  height: _iconSize,
+                  padding: EdgeInsets.all(_iconPadding),
+                  margin: EdgeInsets.fromLTRB(
+                    _imageSize - _iconSize - 2 * (_iconPadding),
+                    _iconPadding,
+                    _iconPadding,
+                    _iconPadding,
                   ),
+                  color: theme.colorScheme.onPrimary,
+                  child: _getSourceIcon(theme.colorScheme.primary),
                 ),
               ],
             ),
@@ -58,13 +66,7 @@ class AlbumCard extends StatelessWidget {
               style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
             ),
 
-            Text(
-              _album.artistName ?? locale.app(.generic, "unknown"),
-              style: TextStyle(
-                color: theme.colorScheme.secondary,
-                fontSize: 12,
-              ),
-            ),
+            ?(_getArtistText(locale, theme)),
           ],
         ),
       ),
@@ -79,5 +81,16 @@ class AlbumCard extends StatelessWidget {
       case SourceType.subsonic:
         return Icon(Icons.api, size: 16, color: color);
     }
+  }
+
+  Widget? _getArtistText(AppLocalizations locale, ThemeData theme) {
+    if (!_showArtistText) {
+      return null;
+    }
+
+    return Text(
+      _album.artistName ?? locale.app(.generic, "unknown"),
+      style: TextStyle(color: theme.colorScheme.secondary, fontSize: 12),
+    );
   }
 }
