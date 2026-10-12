@@ -42,7 +42,21 @@ class AlbumCard extends StatelessWidget {
                   _album.coverArtUri,
                   width: _imageSize,
                   height: _imageSize,
-                  backgroundColor: theme.colorScheme.primary,
+                  alignment: .topCenter,
+                ),
+
+                // Gradient
+                Container(
+                  width: _imageSize,
+                  height: _imageSize,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: .topCenter,
+                      end: .bottomCenter,
+                      stops: [0.8, 1.0],
+                      colors: [Colors.transparent, Colors.black],
+                    ),
+                  ),
                 ),
 
                 Container(

@@ -7,6 +7,7 @@ class UriImage extends StatelessWidget {
   final double _width;
   final double _height;
   final Color? _backgroundColor;
+  final AlignmentGeometry _alignment;
 
   const UriImage(
     this._uri, {
@@ -14,6 +15,7 @@ class UriImage extends StatelessWidget {
     this._width = 160.0,
     this._height = 160.0,
     this._backgroundColor,
+    this._alignment = .center,
   });
 
   @override
@@ -35,12 +37,14 @@ class UriImage extends StatelessWidget {
     if (_uri.isScheme("file")) {
       return Image.file(
         File.fromUri(_uri),
+        alignment: _alignment,
         errorBuilder: (context, exception, stackTrace) => Container(),
       );
     }
 
     return Image.network(
       _uri.toString(),
+      alignment: _alignment,
       errorBuilder: (context, exception, stackTrace) => Container(),
     );
   }
