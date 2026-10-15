@@ -185,7 +185,9 @@ class _HomePageState extends State<HomePage> {
             Row(
               mainAxisAlignment: .end,
               children: [
-                Text(locale.app(.generic, _connected ? "online" : "offline")),
+                Text(
+                  locale.translate(.generic, _connected ? "online" : "offline"),
+                ),
 
                 IconButton(onPressed: () => _load(), icon: Icon(Icons.refresh)),
                 IconButton(
@@ -195,11 +197,11 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
 
-            Text(locale.app(.generic, "albums")),
+            Text(locale.translate(.generic, "albums")),
 
             _buildAlbums(locale),
 
-            Text(locale.app(.generic, "artists")),
+            Text(locale.translate(.generic, "artists")),
 
             _buildArtists(locale),
           ],

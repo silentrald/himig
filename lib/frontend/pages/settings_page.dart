@@ -78,19 +78,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 ? _buildForm(context)
                 : FilledButton(
                     onPressed: () => setState(() => _showForm = true),
-                    child: Text(locale.app(.generic, "add")),
+                    child: Text(locale.translate(.generic, "add")),
                   ),
 
             FilledButton(
               onPressed: _scanAlbums,
-              child: Text(locale.app(.generic, "scan")),
+              child: Text(locale.translate(.generic, "scan")),
             ),
 
             FilledButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text(locale.app(.generic, "back")),
+              child: Text(locale.translate(.generic, "back")),
             ),
 
             _buildLanguageDropdown(),
@@ -108,7 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
           subtitle: Row(
             children: [
               Icon(Icons.folder, size: 16),
-              Text(locale.app(.source, "folder")),
+              Text(locale.translate(.source, "folder")),
             ],
           ),
           children: [
@@ -124,7 +124,7 @@ class _SettingsPageState extends State<SettingsPage> {
           subtitle: Row(
             children: [
               Icon(Icons.api, size: 16),
-              Text(locale.app(.source, "subsonic")),
+              Text(locale.translate(.source, "subsonic")),
             ],
           ),
           children: [

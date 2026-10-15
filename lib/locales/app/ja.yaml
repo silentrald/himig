@@ -9,6 +9,7 @@ generic:
   cache: キャッシュ
   create: 作成する
   delete: 削除
+  local: ローカル
   name: 名前
   none: なし
   offline: オフライン
@@ -16,6 +17,7 @@ generic:
   path: パス
   password: パスワード
   refresh: リフレッシュ
+  remote: リモート
   scan: スキャン
   settings: 設定
   tracks: トラック

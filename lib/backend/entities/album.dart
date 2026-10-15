@@ -1,3 +1,5 @@
+import "package:himig/backend/errors/multi_project_error.dart";
+import "package:himig/backend/errors/project_error.dart";
 import "package:himig/utils/result.dart";
 
 enum AlbumSort { recentlyAdded, releaseYear }
@@ -5,7 +7,7 @@ enum AlbumSort { recentlyAdded, releaseYear }
 class Album {
   int id;
   final String name;
-  final int artistId;
+  final int? artistId;
   final String? artistName;
 
   final int? _localSourceId;
@@ -21,7 +23,7 @@ class Album {
   Album({
     this.id = 0,
     required this.name,
-    this.artistId = 0,
+    this.artistId,
     this.artistName,
     this._localSourceId,
     this._remoteSourceId,
@@ -30,18 +32,20 @@ class Album {
     this.coverArtUri,
   });
 
-  static String? validateSources(int? remoteSourceId, int? localSourceId) {
+  static ProjectError? validateSources(
+    int? remoteSourceId,
+    int? localSourceId,
+  ) {
     if (localSourceId == null && remoteSourceId == null) {
-      return "No sources found for album";
+      return ProjectError(.entityAlbum, "sources");
     }
 
     return null;
   }
 
   static Result<Album> create({
-    int id = 0,
     required String name,
-    int artistId = 0,
+    int? artistId,
     String? artistName,
     int? localSourceId,
     int? remoteSourceId,
@@ -49,17 +53,16 @@ class Album {
     int? releaseYear,
     Uri? coverArtUri,
   }) {
-    final List<String> errors = [
+    final List<ProjectError> errors = [
       ?validateSources(localSourceId, remoteSourceId),
     ];
 
     if (errors.isNotEmpty) {
-      return Result.error(Exception(errors.join(",")));
+      return Result.error(MultiProjectError(errors));
     }
 
     return Result.ok(
       Album(
-        id: id,
         name: name,
         artistId: artistId,
         artistName: artistName,
@@ -96,5 +99,5 @@ class Album {
 
   int? get localSourceId => _localSourceId;
   int? get remoteSourceId => _remoteSourceId;
-  int get sourceId => _remoteSourceId ?? _localSourceId ?? 0;
+  int get sourceId => _localSourceId ?? _remoteSourceId ?? 0;
 }

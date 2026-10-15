@@ -1,2 +1,16 @@
-generic:
-  test: Test
+entityAlbum:
+  sources: "No sources (local/remote) found in creating an album."
+
+entitySong:
+  pair: "{source} pair is invalid for song."
+  sources: "No sources (local/remote) found in creating a song."
+
+entitySource:
+  folderNameRequired: "Name is required"
+  folderPathRequired: "Path is required"
+  subsonicNameRequired: "Name is required"
+  subsonicUsernameRequired: "Username is required"
+  subsonicPasswordRequired: "Password is required"
+  subsonicAddressRequired: "Address is required"
+  subsonicAddressProtocol: "Address should start with 'http' or 'https'"
+

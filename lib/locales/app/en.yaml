@@ -9,6 +9,7 @@ generic:
   cache: Cache
   create: Create
   delete: Delete
+  local: Local
   name: Name
   none: None
   offline: Offline
@@ -16,6 +17,7 @@ generic:
   path: Path
   password: Password
   refresh: Refresh
+  remote: Remote
   scan: Scan
   settings: Settings
   tracks: Tracks

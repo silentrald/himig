@@ -47,10 +47,13 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
     _localSourceId = source.localSourceId;
   }
 
-  String? _validatePassword(String value) =>
-      widget.source != null && _password.isEmpty
-      ? null
-      : SubsonicSource.validatePassword(value);
+  String? _validatePassword(String value, AppLocalizations locale) {
+    if (widget.source != null && _password.isEmpty) {
+      return null;
+    }
+
+    return locale.translateProjectError(SubsonicSource.validatePassword(value));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,9 +68,11 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
           TextFormField(
             initialValue: _name,
             decoration: InputDecoration(
-              label: Text(locale.app(.generic, "name")),
+              label: Text(locale.translate(.generic, "name")),
             ),
-            validator: (value) => SubsonicSource.validateName(value ?? ""),
+            validator: (value) => locale.translateProjectError(
+              SubsonicSource.validateName(value ?? ""),
+            ),
             onSaved: (value) => _name = value!,
           ),
 
@@ -75,9 +80,11 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
           TextFormField(
             initialValue: _address,
             decoration: InputDecoration(
-              label: Text(locale.app(.generic, "address")),
+              label: Text(locale.translate(.generic, "address")),
             ),
-            validator: (value) => SubsonicSource.validateAddress(value ?? ""),
+            validator: (value) => locale.translateProjectError(
+              SubsonicSource.validateAddress(value ?? ""),
+            ),
             onSaved: (value) => _address = value!,
           ),
 
@@ -85,9 +92,11 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
           TextFormField(
             initialValue: _username,
             decoration: InputDecoration(
-              label: Text(locale.app(.generic, "username")),
+              label: Text(locale.translate(.generic, "username")),
             ),
-            validator: (value) => SubsonicSource.validateUsername(value ?? ""),
+            validator: (value) => locale.translateProjectError(
+              SubsonicSource.validateUsername(value ?? ""),
+            ),
             onSaved: (value) => _username = value!,
           ),
 
@@ -96,7 +105,7 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
             initialValue: _password,
             obscureText: _passwordObscured,
             decoration: InputDecoration(
-              label: Text(locale.app(.generic, "password")),
+              label: Text(locale.translate(.generic, "password")),
               suffixIcon: IconButton(
                 icon: Icon(
                   _passwordObscured ? Icons.visibility : Icons.visibility_off,
@@ -105,7 +114,7 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
                     setState(() => _passwordObscured = !_passwordObscured),
               ),
             ),
-            validator: (value) => _validatePassword(value ?? ""),
+            validator: (value) => _validatePassword(value ?? "", locale),
             onSaved: (value) => _password = value!,
           ),
 
@@ -116,7 +125,7 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
             items: [
               DropdownMenuItem(
                 value: null,
-                child: Text(locale.app(.generic, "none")),
+                child: Text(locale.translate(.generic, "none")),
               ),
               ...AppState().writeableSources.map(
                 (source) => DropdownMenuItem(
@@ -148,7 +157,7 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
         FilledButton(
           onPressed: () => widget.onCancel?.call(),
           style: buttonStyle,
-          child: Text(locale.app(.generic, "delete")),
+          child: Text(locale.translate(.generic, "delete")),
         ),
       );
       buttons.add(
@@ -161,17 +170,22 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
 
             _formGlobalKey.currentState!.save();
 
-            final SubsonicSource source = widget.source!.copy();
-            source.setName(_name);
-            source.setAddress(_address);
-            source.setUsername(_username);
-            source.setLocalSourceId(_localSourceId);
-            if (_password.isNotEmpty) source.setPassword(_password);
+            // Value should be safe to get since validation is done in the form
+            final source = widget.source!
+                .copyWith(
+                  name: _name,
+                  address: _address,
+                  username: _username,
+                  password: _password.isEmpty ? null : _password,
+                  localSourceId: _localSourceId,
+                )
+                .value;
+            print("source data ${source.serialize()}");
             widget.onAccept!.call(source);
             setState(() => _password = ""); // Clear password afterwards
           },
           style: buttonStyle,
-          child: Text(locale.app(.generic, "update")),
+          child: Text(locale.translate(.generic, "update")),
         ),
       );
     } else {
@@ -195,7 +209,7 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
             );
           },
           style: buttonStyle,
-          child: Text(locale.app(.generic, "create")),
+          child: Text(locale.translate(.generic, "create")),
         ),
       );
     }

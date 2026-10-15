@@ -203,7 +203,7 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
               ),
 
               Text(
-                widget.song.artist ?? locale.app(.generic, "unknown"),
+                widget.song.artist ?? locale.translate(.generic, "unknown"),
                 style: TextStyle(
                   fontSize: 12.0,
                   color: theme.colorScheme.onPrimary,

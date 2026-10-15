@@ -24,17 +24,17 @@ class SqfliteSourceRepo extends SourceRepo {
       if (type == SourceType.folder.name) {
         sources.add(
           FolderSource.fromRepo(
-            row["id"],
-            row["name"],
-            jsonDecode(row["data"]),
+            id: row["id"],
+            name: row["name"],
+            data: jsonDecode(row["data"]),
           ),
         );
       } else if (type == SourceType.subsonic.name) {
         sources.add(
           SubsonicSource.fromRepo(
-            row["id"],
-            row["name"],
-            jsonDecode(row["data"]),
+            id: row["id"],
+            name: row["name"],
+            json: jsonDecode(row["data"]),
           ),
         );
       } else {

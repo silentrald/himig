@@ -140,7 +140,8 @@ class SubsonicSourceImplementation
       final id = song["id"];
       final createResult = Song.create(
         title: song["title"],
-        duration: song["duration"],
+        // Subsonic returns duration in seconds
+        duration: Duration(seconds: song["duration"]),
         reference: id,
         releaseYear: song["year"],
         remoteSourceId: source.id,

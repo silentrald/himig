@@ -1,5 +1,7 @@
 import "dart:convert";
 
+import "package:himig/backend/errors/multi_project_error.dart";
+import "package:himig/backend/errors/project_error.dart";
 import "package:himig/constant.dart" as constant;
 import "package:himig/utils/result.dart";
 import "package:himig/utils/string.dart";
@@ -38,42 +40,44 @@ class FolderSource extends Source {
     required this._writeable,
   });
 
-  factory FolderSource.fromRepo(
-    int id,
-    String name,
-    Map<String, dynamic> json,
-  ) {
+  factory FolderSource.fromRepo({
+    required int id,
+    required String name,
+    required Map<String, dynamic> data,
+  }) {
     return FolderSource(
       id: id,
       name: name,
-      path: json["path"],
-      writeable: json["writeable"],
+      path: data["path"],
+      writeable: data["writeable"],
     );
   }
 
-  static String? validateName(String name) {
-    if (name.isEmpty) return "name is empty";
+  static ProjectError? validateName(String name) {
+    if (name.isEmpty) return ProjectError(.entitySource, "folderNameRequired");
     return null;
   }
 
-  static String? validatePath(String path) {
-    if (path.isEmpty) return "path is empty";
+  static ProjectError? validatePath(String path) {
+    if (path.isEmpty) return ProjectError(.entitySource, "folderPathRequired");
     return null;
   }
 
   static Result<FolderSource> create({
-    required int id,
     required String name,
     required String path,
     required bool writeable,
   }) {
-    final List<String> errors = [?validateName(name), ?validatePath(path)];
+    final List<ProjectError> errors = [
+      ?validateName(name),
+      ?validatePath(path),
+    ];
     if (errors.isNotEmpty) {
-      return Result.error(Exception(errors.join(",")));
+      return Result.error(MultiProjectError(errors));
     }
 
     return Result.ok(
-      FolderSource(id: id, name: name, path: path, writeable: writeable),
+      FolderSource(name: name, path: path, writeable: writeable),
     );
   }
 
@@ -123,19 +127,18 @@ class SubsonicSource extends Source {
 
   int? _localSourceId;
 
-  SubsonicSource._(
-    this._id,
-    this._name,
-    this._https,
-    this._host,
-    this._username,
-    this._hashedPassword,
-    this._salt,
-    this._localSourceId,
-  );
+  SubsonicSource._({
+    this._id = 0,
+    required this._name,
+    required this._https,
+    required this._host,
+    required this._username,
+    required this._hashedPassword,
+    required this._salt,
+    required this._localSourceId,
+  });
 
   factory SubsonicSource.createUnsafe({
-    int id = 0,
     required String name,
     required String address,
     required String username,
@@ -146,61 +149,66 @@ class SubsonicSource extends Source {
     final https = address.startsWith("https://");
     final salt = getRandomString(saltLength);
     return SubsonicSource._(
-      id,
-      name,
-      address.startsWith("https://"),
-      address.substring(https ? 8 : 7),
-      username,
-      hashMd5("$password$salt"),
-      salt,
-      localSourceId,
+      name: name,
+      https: address.startsWith("https://"),
+      host: address.substring(https ? 8 : 7),
+      username: username,
+      hashedPassword: hashMd5("$password$salt"),
+      salt: salt,
+      localSourceId: localSourceId,
     );
   }
 
-  factory SubsonicSource.fromRepo(
-    int id,
-    String name,
-    Map<String, dynamic> json,
-  ) {
-    return SubsonicSource._(
-      id,
-      name,
-      json["https"],
-      json["host"],
-      json["username"],
-      json["password"],
-      json["salt"],
-      json["localSourceId"],
-    );
-  }
+  factory SubsonicSource.fromRepo({
+    required int id,
+    required String name,
+    required Map<String, dynamic> json,
+  }) => SubsonicSource._(
+    id: id,
+    name: name,
+    https: json["https"],
+    host: json["host"],
+    username: json["username"],
+    hashedPassword: json["password"],
+    salt: json["salt"],
+    localSourceId: json["localSourceId"],
+  );
 
   // === Validation Checks === //
 
-  static String? validateName(String name) {
-    if (name.isEmpty) return "name is empty";
+  static ProjectError? validateName(String name) {
+    if (name.isEmpty)
+      return ProjectError(.entitySource, "subsonicNameRequired");
     return null;
   }
 
-  static String? validateUsername(String username) {
-    if (username.isEmpty) return "username is empty";
-    return null;
-  }
-
-  static String? validatePassword(String password) {
-    if (password.isEmpty) return "password is empty";
-    return null;
-  }
-
-  static String? validateAddress(String address) {
-    if (address.isEmpty) return "address is empty";
-    if (!address.startsWith("https://") && !address.startsWith("http://")) {
-      return "address should start with 'http' or 'https'";
+  static ProjectError? validateUsername(String username) {
+    if (username.isEmpty) {
+      return ProjectError(.entitySource, "subsonicUsernameRequired");
     }
     return null;
   }
 
+  static ProjectError? validatePassword(String password) {
+    if (password.isEmpty) {
+      return ProjectError(.entitySource, "subsonicPasswordRequired");
+    }
+    return null;
+  }
+
+  static ProjectError? validateAddress(String address) {
+    if (address.isEmpty) {
+      return ProjectError(.entitySource, "subsonicAddressRequired");
+    }
+
+    if (!address.startsWith("https://") && !address.startsWith("http://")) {
+      return ProjectError(.entitySource, "addressProtocol");
+    }
+
+    return null;
+  }
+
   static Result<SubsonicSource> create({
-    int id = 0,
     required String name,
     required String address,
     required String username,
@@ -208,19 +216,18 @@ class SubsonicSource extends Source {
     int? localSourceId,
     int saltLength = 6,
   }) {
-    final List<String> errors = [
+    final List<ProjectError> errors = [
       ?validateName(name),
       ?validateUsername(username),
       ?validatePassword(password),
       ?validateAddress(address),
     ];
     if (errors.isNotEmpty) {
-      return Result.error(Exception(errors.join(",")));
+      return Result.error(MultiProjectError(errors));
     }
 
     return Result.ok(
       SubsonicSource.createUnsafe(
-        id: id,
         name: name,
         address: address,
         username: username,
@@ -231,16 +238,61 @@ class SubsonicSource extends Source {
     );
   }
 
-  SubsonicSource copy() {
-    return SubsonicSource._(
-      _id,
-      _name,
-      _https,
-      _host,
-      _username,
-      _hashedPassword,
-      _salt,
-      _localSourceId,
+  Result<SubsonicSource> copyWith({
+    int? id,
+    String? name,
+    String? address,
+    String? username,
+    String? password,
+    int? localSourceId,
+    int saltLength = 6,
+  }) {
+    final List<ProjectError> errors = [];
+    ProjectError? error;
+
+    name ??= _name;
+    username ??= _username;
+    localSourceId ??= _localSourceId;
+
+    bool isHttps = _https;
+    String host = _host;
+    if (address != null) {
+      error = validateAddress(address);
+      if (error == null) {
+        isHttps = address.startsWith("https://");
+        host = address.substring(https ? 8 : 7);
+      } else {
+        errors.add(error);
+      }
+    }
+
+    var hashedPassword = _hashedPassword;
+    var salt = _salt;
+    if (password != null) {
+      error = validatePassword(password);
+      if (error == null) {
+        salt = getRandomString(saltLength);
+        hashedPassword = hashMd5("$password$salt");
+      } else {
+        errors.add(error);
+      }
+    }
+
+    if (errors.isNotEmpty) {
+      return Result.error(MultiProjectError(errors));
+    }
+
+    return Result.ok(
+      SubsonicSource._(
+        id: id ?? _id,
+        name: name,
+        https: isHttps,
+        host: host,
+        username: username,
+        hashedPassword: hashedPassword,
+        salt: salt,
+        localSourceId: localSourceId,
+      ),
     );
   }
 
@@ -281,14 +333,14 @@ class SubsonicSource extends Source {
   String get username => _username;
 
   /// Returns the string error code
-  String? setName(String name) {
+  ProjectError? setName(String name) {
     final error = validateName(name);
     if (error == null) _name = name;
     return error;
   }
 
   /// Returns the string error code
-  String? setAddress(String address) {
+  ProjectError? setAddress(String address) {
     final error = validateAddress(address);
     if (error == null) {
       _https = address.startsWith("https://");
@@ -298,14 +350,14 @@ class SubsonicSource extends Source {
   }
 
   /// Returns the string error code
-  String? setUsername(String username) {
+  ProjectError? setUsername(String username) {
     final error = validateUsername(username);
     if (error == null) _username = username;
     return error;
   }
 
   /// Returns the string error code
-  String? setPassword(String password, {int saltLength = 6}) {
+  ProjectError? setPassword(String password, {int saltLength = 6}) {
     final error = validatePassword(password);
     if (error == null) {
       _salt = getRandomString(saltLength);
@@ -314,7 +366,7 @@ class SubsonicSource extends Source {
     return error;
   }
 
-  String? setLocalSourceId(int? localSourceId) {
+  ProjectError? setLocalSourceId(int? localSourceId) {
     _localSourceId = localSourceId;
     return null;
   }

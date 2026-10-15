@@ -103,7 +103,7 @@ class AlbumCard extends StatelessWidget {
     }
 
     return Text(
-      _album.artistName ?? locale.app(.generic, "unknown"),
+      _album.artistName ?? locale.translate(.generic, "unknown"),
       style: TextStyle(color: theme.colorScheme.secondary, fontSize: 12),
     );
   }

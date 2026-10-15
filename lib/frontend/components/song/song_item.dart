@@ -14,8 +14,11 @@ class SongItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final minutes = (_song.duration / 60).truncate();
-    final seconds = (_song.duration % 60).truncate().toString().padLeft(2, "0");
+    final minutes = (_song.duration.inSeconds / 60).truncate();
+    final seconds = (_song.duration.inSeconds % 60)
+        .truncate()
+        .toString()
+        .padLeft(2, "0");
     final durationText = "$minutes:$seconds";
 
     final durationWidth = (TextPainter(

@@ -5,7 +5,7 @@ CREATE TABLE albums (
   name TEXT NOT NULL,
   local_source_id INTEGER,
   remote_source_id INTEGER,
-  artist_id INTEGER NOT NULL,
+  artist_id INTEGER,
   reference TEXT,
   release_year INT,
   cover_art_uri TEXT,

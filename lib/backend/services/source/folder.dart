@@ -78,10 +78,10 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
         final metadata = result.value;
         final artistName =
             metadata.artist ??
-            AppLocalizations.instance.app(.generic, "unknown");
+            AppLocalizations.instance.translate(.generic, "unknown");
         final albumName =
             metadata.album ??
-            AppLocalizations.instance.app(.generic, "unknown");
+            AppLocalizations.instance.translate(.generic, "unknown");
         final key = "$artistName-$albumName";
 
         artistId = artistMap[artistName];
@@ -143,7 +143,7 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
             metadata.title ?? path.basenameWithoutExtension(file.path);
         final songResult = Song.create(
           title: title,
-          duration: metadata.duration?.inSeconds ?? 0,
+          duration: metadata.duration ?? Duration.zero,
           reference: file.path,
           releaseYear: metadata.releaseYear,
           localSourceId: source.id,

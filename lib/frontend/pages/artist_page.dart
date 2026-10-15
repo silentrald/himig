@@ -78,8 +78,8 @@ class _ArtistPageState extends State<ArtistPage> {
         appBar: AppBar(
           bottom: TabBar(
             tabs: [
-              Tab(text: locale.app(.generic, "tracks")),
-              Tab(text: locale.app(.generic, "albums")),
+              Tab(text: locale.translate(.generic, "tracks")),
+              Tab(text: locale.translate(.generic, "albums")),
             ],
           ),
           title: Row(

@@ -109,7 +109,7 @@ class _AlbumPageState extends State<AlbumPage> {
     return SliverToBoxAdapter(
       child: GestureDetector(
         onTap: () => _cache(),
-        child: Text(locale.app(.generic, "cache")),
+        child: Text(locale.translate(.generic, "cache")),
       ),
     );
   }

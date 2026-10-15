@@ -1,3 +1,5 @@
+import "package:himig/backend/errors/multi_project_error.dart";
+import "package:himig/backend/errors/project_error.dart";
 import "package:himig/utils/result.dart";
 
 class Song {
@@ -5,8 +7,7 @@ class Song {
   final String title;
   final String? albumName;
   final String? artistName;
-  // TODO: Convert this to Duration
-  final int duration; // In seconds
+  final Duration duration;
 
   /// For remote source - id
   /// For local source - path
@@ -14,15 +15,20 @@ class Song {
 
   final int? releaseYear;
 
+  /// Reference to [Source]
   int? _localSourceId;
   Uri? _localUri;
+
+  /// Reference to [Source]
   int? _remoteSourceId;
   Uri? _remoteUri;
   final Uri? coverArtUri;
 
-  /// Reference to the [Album] entity
-  final int albumId;
-  final int artistId;
+  /// Reference to [Album]
+  final int? albumId;
+
+  /// Reference to [Artist]
+  final int? artistId;
 
   Song({
     this.id = 0,
@@ -38,19 +44,21 @@ class Song {
     this._remoteSourceId,
     this._remoteUri,
     this.coverArtUri,
-    required this.albumId,
-    required this.artistId,
+    this.albumId,
+    this.artistId,
   });
 
-  static String? validatePair(int? sourceId, Uri? uri, bool local) {
+  static ProjectError? validatePair(int? sourceId, Uri? uri, bool local) {
     if ((sourceId == null) ^ (uri == null)) {
       // Both should be null or not null
-      return "${local ? "Local" : "Remote"} pair is invalid for song";
+      return ProjectError(.entitySong, "pair", {
+        "source": (.generic, local ? "local" : "remote"),
+      });
     }
     return null;
   }
 
-  static String? validateSources(
+  static ProjectError? validateSources(
     int? localSourceId,
     Uri? localUri,
     int? remoteSourceId,
@@ -60,18 +68,17 @@ class Song {
     final remotePair = remoteSourceId != null && remoteUri != null;
 
     if (!localPair && !remotePair) {
-      return "No sources found for song";
+      return ProjectError(.entitySong, "sources");
     }
 
     return null;
   }
 
   static Result<Song> create({
-    int id = 0,
     required String title,
     String? albumName,
     String? artistName,
-    required int duration,
+    required Duration duration,
     required String reference,
     int? releaseYear,
     int? localSourceId,
@@ -79,21 +86,20 @@ class Song {
     int? remoteSourceId,
     Uri? remoteUri,
     Uri? coverArtUri,
-    required int albumId,
-    required int artistId,
+    int? albumId,
+    int? artistId,
   }) {
-    final List<String> errors = [
+    final List<ProjectError> errors = [
       ?validatePair(localSourceId, localUri, true),
       ?validatePair(remoteSourceId, remoteUri, false),
       ?validateSources(localSourceId, localUri, remoteSourceId, remoteUri),
     ];
     if (errors.isNotEmpty) {
-      return Result.error(Exception(errors.join(",")));
+      return Result.error(MultiProjectError(errors));
     }
 
     return Result.ok(
       Song(
-        id: id,
         title: title,
         albumName: albumName,
         artistName: artistName,
@@ -118,7 +124,7 @@ class Song {
   int get sourceId => _localSourceId ?? _remoteSourceId!;
   Uri get uri => _localUri ?? _remoteUri!;
 
-  String? setLocal(int? sourceId, Uri? uri) {
+  ProjectError? setLocal(int? sourceId, Uri? uri) {
     final error = validatePair(sourceId, uri, true);
     if (error == null) {
       _localSourceId = sourceId;
@@ -127,7 +133,7 @@ class Song {
     return error;
   }
 
-  String? setRemote(int? sourceId, Uri? uri) {
+  ProjectError? setRemote(int? sourceId, Uri? uri) {
     final error = validatePair(sourceId, uri, false);
     if (error == null) {
       _remoteSourceId = sourceId;

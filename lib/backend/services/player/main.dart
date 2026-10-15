@@ -54,7 +54,7 @@ class MainPlayerService extends PlayerService {
       title: song.title,
       album: song.albumName,
       artist: song.artistName,
-      duration: Duration(seconds: song.duration),
+      duration: song.duration,
       artUri: song.coverArtUri,
     ),
   );
@@ -68,7 +68,7 @@ class MainPlayerService extends PlayerService {
             title: song.title,
             album: song.albumName,
             artist: song.artistName,
-            duration: Duration(seconds: song.duration),
+            duration: song.duration,
             artUri: song.coverArtUri,
           ),
         )

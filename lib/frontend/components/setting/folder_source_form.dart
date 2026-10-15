@@ -46,8 +46,13 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
   }
 
   Future<void> _selectFolder() async {
+    final locale = AppLocalizations.of(context)!;
+
     final path = (await FilePicker.getDirectoryPath()) ?? "";
-    _pathError = FolderSource.validatePath(path);
+    final error = FolderSource.validatePath(path);
+    if (error != null) {
+      _pathError = locale.translateProjectError(error);
+    }
     _pathController.text = _pathError == null ? path : "";
   }
 
@@ -64,9 +69,11 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
           TextFormField(
             initialValue: _name,
             decoration: InputDecoration(
-              label: Text(locale.app(.generic, "name")),
+              label: Text(locale.translate(.generic, "name")),
             ),
-            validator: (value) => FolderSource.validateName(value ?? ""),
+            validator: (value) => locale.translateProjectError(
+              FolderSource.validateName(value ?? ""),
+            ),
             onSaved: (value) => _name = value!,
           ),
 
@@ -78,7 +85,7 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
             canRequestFocus: false,
             controller: _pathController,
             decoration: InputDecoration(
-              label: Text(locale.app(.generic, "path")),
+              label: Text(locale.translate(.generic, "path")),
               errorText: _pathError,
             ),
             onTap: () => _selectFolder(),
@@ -93,7 +100,7 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
                 .map(
                   (value) => DropdownMenuItem(
                     value: value,
-                    child: Text(locale.app(.folderReadWrite, value.name)),
+                    child: Text(locale.translate(.folderReadWrite, value.name)),
                   ),
                 )
                 .toList(),
@@ -120,7 +127,7 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
         FilledButton(
           onPressed: () => widget.onCancel?.call(),
           style: buttonStyle,
-          child: Text(locale.app(.generic, "delete")),
+          child: Text(locale.translate(.generic, "delete")),
         ),
       );
       buttons.add(
@@ -144,7 +151,7 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
             );
           },
           style: buttonStyle,
-          child: Text(locale.app(.generic, "update")),
+          child: Text(locale.translate(.generic, "update")),
         ),
       );
     } else {
@@ -167,7 +174,7 @@ class _FolderSourceFormState extends State<FolderSourceForm> {
             );
           },
           style: buttonStyle,
-          child: Text(locale.app(.generic, "create")),
+          child: Text(locale.translate(.generic, "create")),
         ),
       );
     }

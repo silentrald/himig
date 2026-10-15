@@ -2,11 +2,10 @@ import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:himig/backend/errors/multi_project_error.dart";
+import "package:himig/backend/errors/project_error.dart";
+import "package:himig/locales/enums.dart";
 import "package:yaml/yaml.dart";
-
-enum AppLocaleKey { generic, source, folderReadWrite }
-
-enum ErrorLocaleKey { _ }
 
 const List<Locale> supportedLocales = [Locale("en", "US"), Locale("ja", "JP")];
 
@@ -52,18 +51,54 @@ class AppLocalizations {
     }
   }
 
-  String _processText(String text, Map<String, dynamic>? arguments) {
+  String _findText(AppLocaleKey? key, String id) {
+    if (key == null) {
+      return id;
+    }
+
+    var map = _appMap[key.name];
+    if (!map.containsKey(id)) {
+      map = _appFallbackMap[key.name];
+    }
+
+    assert(map.containsKey(key), "app map with $key does not contain $key");
+    return map[id];
+  }
+
+  /// [AppLocaleKey]? - key
+  /// [String] - id/text
+  /// If [AppLocaleKey]? is not null, treat the [String] value as an id to
+  ///   reference the value in the translation resource.
+  /// If [AppLocaleKey?] is null, then immediately use the [String] value
+  ///   as text.
+  String _processText(
+    String text,
+    Map<String, (AppLocaleKey?, String)>? arguments,
+  ) {
     if (arguments == null) {
       return text;
     }
 
     for (final entry in arguments.entries) {
-      text = text.replaceAll("{${entry.key}}", entry.value.toString());
+      text = text.replaceAll(
+        "{${entry.key}}",
+        _findText(entry.value.$1, entry.value.$2),
+      );
     }
     return text;
   }
 
-  String app(AppLocaleKey key, String id, [Map<String, dynamic>? arguments]) {
+  /// [AppLocaleKey]? - key
+  /// [String] - id/text
+  /// If [AppLocaleKey]? is not null, treat the [String] value as an id to
+  ///   reference the value in the translation resource.
+  /// If [AppLocaleKey?] is null, then immediately use the [String] value
+  ///   as text.
+  String translate(
+    AppLocaleKey key,
+    String id, [
+    Map<String, (AppLocaleKey?, String)>? arguments,
+  ]) {
     var map = _appMap[key.name];
     if (!map.containsKey(id)) {
       map = _appFallbackMap[key.name];
@@ -73,10 +108,16 @@ class AppLocalizations {
     return _processText(map[id], arguments);
   }
 
-  String error(
+  /// [AppLocaleKey]? - key
+  /// [String] - id/text
+  /// If [AppLocaleKey]? is not null, treat the [String] value as an id to
+  ///   reference the value in the translation resource.
+  /// If [AppLocaleKey?] is null, then immediately use the [String] value
+  ///   as text.
+  String _translateError(
     ErrorLocaleKey key,
     String id, [
-    Map<String, dynamic>? arguments,
+    Map<String, (AppLocaleKey?, String)>? arguments,
   ]) {
     var map = _errorMap[key.name];
     if (!map.containsKey(id)) {
@@ -86,6 +127,16 @@ class AppLocalizations {
     assert(map.containsKey(id), "error map with $key does not contain $id");
     return _processText(map[id], arguments);
   }
+
+  String? translateProjectError(ProjectError? error) => error == null
+      ? null
+      : _translateError(error.key, error.id, error.arguments);
+
+  // NOTE: check if the separator ", " needs to be changed for other locales
+  String? translateMultipleProjectError(MultiProjectError? error) => error
+      ?.errors
+      .map((e) => _translateError(e.key, e.id, e.arguments))
+      .join(", ");
 }
 
 class _AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

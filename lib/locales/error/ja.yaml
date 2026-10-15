@@ -1,2 +1,6 @@
-generic:
-  test: Test
+entityAlbum:
+  sources: "アルバムの作成時にソース（ローカル/リモート）が見つかりません。"
+
+entitySong:
+  pair: "{source} ペアは曲に対して無効です。"
+  sources: "曲を作成する際にソース（ローカル/リモート）が見つかりません。"

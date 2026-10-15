@@ -15,7 +15,7 @@ class SqfliteSongRepo extends SongRepo {
       title: row["title"],
       albumName: row["album_name"],
       artistName: row["artist_name"],
-      duration: row["duration"],
+      duration: Duration(milliseconds: row["duration"]),
       reference: row["reference"],
       releaseYear: row["release_year"],
       localSourceId: row["local_source_id"],
@@ -103,7 +103,7 @@ WHERE s.artist_id = ?
   FutureResult<Song> insertSong(RepoClient client, Song song) async {
     final result = await client.insert(_tableName, {
       "title": song.title,
-      "duration": song.duration,
+      "duration": song.duration.inMilliseconds,
       "reference": song.reference,
       "release_year": song.releaseYear,
       "local_source_id": song.localSourceId,

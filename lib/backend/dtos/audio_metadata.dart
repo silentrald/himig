@@ -1,6 +1,6 @@
 import "package:flutter/foundation.dart";
 
-class AudioMetadata {
+class AudioMetadataDto {
   final String? title;
   final String? album;
   final String? artist;
@@ -8,7 +8,7 @@ class AudioMetadata {
   final Duration? duration;
   final Uint8List? image;
 
-  AudioMetadata({
+  AudioMetadataDto({
     required this.title,
     required this.album,
     required this.artist,
