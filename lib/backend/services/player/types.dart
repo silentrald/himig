@@ -40,6 +40,16 @@ class PlayerStatus {
 abstract class PlayerService {
   Future<void> init(String channelId, String channelName);
 
+  /// Initialize the song list and play it immediately.
+  ///
+  /// [index] - Starting index to play the song list.
+  /// [shuffle] - If set to true, the song list with be played in a random order.
+  Future<void> playSongList(
+    List<Song> songs, {
+    int index = 0,
+    bool shuffle = false,
+  });
+
   Future<void> play();
   Future<void> pause();
 
@@ -49,12 +59,12 @@ abstract class PlayerService {
   Future<void> skipToNext();
   Future<void> skipToPrevious();
 
-  //Future<void> setShuffle(bool shuffle);
+  Future<void> setShuffle(bool shuffle);
   Future<void> setRepeat(PlayerRepeat repeat);
 
   Future<void> addSong(Song song);
   Future<void> addSongList(List<Song> songs);
-  Future<void> clearQueue();
+  Future<void> clearSongList();
 
   // Events
 

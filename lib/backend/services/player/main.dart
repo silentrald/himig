@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:audio_service/audio_service.dart";
 import "package:flutter/foundation.dart";
 import "package:himig/backend/entities/song.dart";
@@ -5,6 +7,23 @@ import "package:himig/backend/services/player/types.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:just_audio/just_audio.dart";
 
+MediaItem _convertSongToMediaItem(Song song) => MediaItem(
+  id: song.uri.toString(),
+  title: song.title,
+  album: song.albumName,
+  artist: song.artistName,
+  duration: song.duration,
+  artUri: song.coverArtUri,
+);
+
+AudioSource _convertSongToAudioSource(Song song) => AudioSource.uri(
+  Uri.parse(song.uri.toString()),
+  tag: _convertSongToMediaItem(song),
+);
+
+/// Logic Paths
+/// - Media related buttons should pass thru [AudioHandler].
+/// - Playlist / Song List update should directly be editted in [AudioPlayer].
 class MainPlayerService extends PlayerService {
   late final AudioHandler _audioHandler;
 
@@ -40,6 +59,10 @@ class MainPlayerService extends PlayerService {
   Future<void> skipToPrevious() => _audioHandler.skipToPrevious();
 
   @override
+  Future<void> setShuffle(bool shuffle) =>
+      _audioHandler.setShuffleMode(shuffle ? .all : .none);
+
+  @override
   Future<void> setRepeat(PlayerRepeat repeat) =>
       _audioHandler.setRepeatMode(switch (repeat) {
         .none => .none,
@@ -47,36 +70,46 @@ class MainPlayerService extends PlayerService {
         .one => .one,
       });
 
+  /// Initialize the song list and play it immediately.
+  ///
+  /// [index] - Starting index to play the song list.
+  /// [shuffle] - if set to true, disregards the passed [index] and
+  ///   randomly picks the first song in the song lists.
   @override
-  Future<void> addSong(Song song) => _audioHandler.addQueueItem(
-    MediaItem(
-      id: song.uri.toString(),
-      title: song.title,
-      album: song.albumName,
-      artist: song.artistName,
-      duration: song.duration,
-      artUri: song.coverArtUri,
-    ),
-  );
+  Future<void> playSongList(
+    List<Song> songs, {
+    int index = 0,
+    bool shuffle = false,
+  }) async {
+    await setShuffle(shuffle);
 
-  @override
-  Future<void> addSongList(List<Song> songs) => _audioHandler.addQueueItems(
-    songs
-        .map(
-          (song) => MediaItem(
-            id: song.uri.toString(),
-            title: song.title,
-            album: song.albumName,
-            artist: song.artistName,
-            duration: song.duration,
-            artUri: song.coverArtUri,
-          ),
-        )
-        .toList(),
-  );
+    if (shuffle) {
+      index = Random().nextInt(songs.length);
+    }
+    await (_audioHandler as _AudioPlayerHandler).player.setAudioSources(
+      songs.map(_convertSongToAudioSource).toList(),
+      initialIndex: index,
+    );
 
+    await play();
+  }
+
+  /// Directly manipulate the [AudioPlayer] which should broadcast it with [AudioHandler].
   @override
-  Future<void> clearQueue() async {
+  Future<void> addSong(Song song) => (_audioHandler as _AudioPlayerHandler)
+      .player
+      .addAudioSource(_convertSongToAudioSource(song));
+
+  /// Directly manipulate the [AudioPlayer] which should broadcast it with [AudioHandler].
+  @override
+  Future<void> addSongList(List<Song> songs) =>
+      (_audioHandler as _AudioPlayerHandler).player.addAudioSources(
+        songs.map(_convertSongToAudioSource).toList(),
+      );
+
+  /// Directly manipulate the [AudioPlayer] which should broadcast it with [AudioHandler].
+  @override
+  Future<void> clearSongList() async {
     await _audioHandler.pause();
     await (_audioHandler as _AudioPlayerHandler).player.clearAudioSources();
   }
@@ -167,6 +200,10 @@ class _AudioPlayerHandler extends BaseAudioHandler {
   Future<void> stop() => player.stop();
 
   @override
+  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) =>
+      player.setShuffleModeEnabled(shuffleMode == .all);
+
+  @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) =>
       player.setLoopMode(switch (repeatMode) {
         .all => .all,
@@ -180,12 +217,13 @@ class _AudioPlayerHandler extends BaseAudioHandler {
   );
 
   @override
-  Future<void> addQueueItems(List<MediaItem> mediaItems) =>
-      player.addAudioSources(
-        mediaItems
-            .map((mi) => AudioSource.uri(Uri.parse(mi.id), tag: mi))
-            .toList(),
-      );
+  Future<void> addQueueItems(List<MediaItem> mediaItems) async {
+    await player.addAudioSources(
+      mediaItems
+          .map((mi) => AudioSource.uri(Uri.parse(mi.id), tag: mi))
+          .toList(),
+    );
+  }
 
   @override
   Future<void> removeQueueItemAt(int index) =>
@@ -211,7 +249,6 @@ class _AudioPlayerHandler extends BaseAudioHandler {
         ProcessingState.completed => AudioProcessingState.completed,
       },
       playing: player.playing,
-      // BUG:
       shuffleMode: player.shuffleModeEnabled ? .all : .none,
       repeatMode: switch (player.loopMode) {
         LoopMode.off => AudioServiceRepeatMode.none,

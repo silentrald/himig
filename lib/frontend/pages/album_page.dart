@@ -7,7 +7,6 @@ import "package:himig/backend/services/player/types.dart";
 import "package:himig/backend/use_cases/album/types.dart";
 import "package:himig/frontend/components/song/song_item.dart";
 import "package:himig/inject.dart";
-import "package:himig/locales/app_localizations.dart";
 import "package:himig/state.dart";
 import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
@@ -24,6 +23,8 @@ class AlbumPage extends StatefulWidget {
 class _AlbumPageState extends State<AlbumPage> {
   final _albumUseCase = getInject<AlbumUseCase>();
   final _playerService = getInject<PlayerService>();
+
+  final _iconSize = 32.0;
 
   List<Song> _songs = [];
 
@@ -54,16 +55,11 @@ class _AlbumPageState extends State<AlbumPage> {
     _load();
   }
 
-  Future<void> _onSongItemPressed(int index) async {
-    await _playerService.clearQueue();
-    await _playerService.addSongList(_songs);
-    await _playerService.skip(index);
-    await _playerService.play();
-  }
+  Future<void> _playAlbumSongList({int index = 0, required bool shuffle}) =>
+      _playerService.playSongList(_songs, index: index, shuffle: shuffle);
 
   @override
   Widget build(BuildContext context) {
-    final locale = AppLocalizations.of(context)!;
     final width = MediaQuery.sizeOf(context).width;
 
     return CustomScrollView(
@@ -77,7 +73,7 @@ class _AlbumPageState extends State<AlbumPage> {
           backgroundColor: Colors.transparent,
         ),
 
-        ?_buildCacheButton(locale),
+        _buildButtons(),
 
         SliverList(
           delegate: SliverChildBuilderDelegate(
@@ -102,20 +98,38 @@ class _AlbumPageState extends State<AlbumPage> {
     return Image.network(coverArtUri.toString(), fit: BoxFit.cover);
   }
 
-  Widget? _buildCacheButton(AppLocalizations locale) {
+  Widget _buildButtons() {
     final source = AppState().getSource(widget.album.sourceId);
 
-    if (!source.remote) return null;
     return SliverToBoxAdapter(
-      child: GestureDetector(
-        onTap: () => _cache(),
-        child: Text(locale.translate(.generic, "cache")),
+      child: Row(
+        mainAxisAlignment: .end,
+        children: [
+          ?(source.remote
+              ? IconButton(
+                  onPressed: () => _cache(),
+                  icon: Icon(Icons.download, size: _iconSize),
+                )
+              : null),
+          IconButton(
+            onPressed: () => _playAlbumSongList(shuffle: true),
+            icon: Icon(Icons.shuffle, size: _iconSize),
+          ),
+          IconButton(
+            onPressed: () => _playAlbumSongList(shuffle: false),
+            icon: Icon(Icons.play_arrow, size: _iconSize),
+          ),
+        ],
       ),
     );
   }
 
   SongItem _buildSongItem(int index, double width) {
     final Song song = _songs[index];
-    return SongItem(song, width: width, onTap: () => _onSongItemPressed(index));
+    return SongItem(
+      song,
+      width: width,
+      onTap: () => _playAlbumSongList(index: index, shuffle: false),
+    );
   }
 }

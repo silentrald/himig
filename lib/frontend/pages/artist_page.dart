@@ -29,6 +29,7 @@ class _ArtistPageState extends State<ArtistPage> {
   final _artistImageSize = 48.0;
   final _trackImageSize = 64.0;
   final _paddingSize = 8.0;
+  final _iconSize = 32.0;
 
   final List<AlbumSongsDto> _albumSongs = [];
 
@@ -61,10 +62,14 @@ class _ArtistPageState extends State<ArtistPage> {
       return;
     }
 
-    await _playerService.clearQueue();
-    await _playerService.addSongList(songs);
-    await _playerService.skip(index);
-    await _playerService.play();
+    await _playerService.playSongList(songs, index: index);
+  }
+
+  Future<void> _playArtistSongList({required bool shuffle}) async {
+    final songs = _albumSongs
+        .map((v) => v.songs)
+        .fold<List<Song>>([], (previous, element) => previous..addAll(element));
+    await _playerService.playSongList(songs, shuffle: shuffle);
   }
 
   @override
@@ -103,8 +108,32 @@ class _ArtistPageState extends State<ArtistPage> {
   Widget _buildTrackList() {
     return SingleChildScrollView(
       child: Column(
-        children: _albumSongs.map((as) => _buildTrack(as)).toList(),
+        children: [
+          _buildButtons(),
+          ..._albumSongs.map((as) => _buildTrack(as)),
+        ],
       ),
+    );
+  }
+
+  Widget _buildButtons() {
+    return Row(
+      mainAxisAlignment: .end,
+      children: [
+        // NOTE: check when should this be hidden for artists
+        IconButton(
+          onPressed: () => {},
+          icon: Icon(Icons.download, size: _iconSize),
+        ),
+        IconButton(
+          onPressed: () => _playArtistSongList(shuffle: true),
+          icon: Icon(Icons.shuffle, size: _iconSize),
+        ),
+        IconButton(
+          onPressed: () => _playArtistSongList(shuffle: false),
+          icon: Icon(Icons.play_arrow, size: _iconSize),
+        ),
+      ],
     );
   }
 
