@@ -100,45 +100,28 @@ class _ArtistPageState extends State<ArtistPage> {
           ),
           toolbarHeight: _artistImageSize + 2 * _paddingSize,
         ),
-        body: TabBarView(children: [_buildTrackList(), _buildAlbumList(width)]),
+        body: TabBarView(
+          children: [_buildTrackList(locale), _buildAlbumList(locale, width)],
+        ),
       ),
     );
   }
 
-  Widget _buildTrackList() {
+  Widget _buildTrackList(AppLocalizations locale) {
     return SingleChildScrollView(
       child: Column(
         children: [
           _buildButtons(),
-          ..._albumSongs.map((as) => _buildTrack(as)),
+          ..._albumSongs.map((as) => _buildTrack(locale, as)),
         ],
       ),
     );
   }
 
-  Widget _buildButtons() {
-    return Row(
-      mainAxisAlignment: .end,
-      children: [
-        // NOTE: check when should this be hidden for artists
-        IconButton(
-          onPressed: () => {},
-          icon: Icon(Icons.download, size: _iconSize),
-        ),
-        IconButton(
-          onPressed: () => _playArtistSongList(shuffle: true),
-          icon: Icon(Icons.shuffle, size: _iconSize),
-        ),
-        IconButton(
-          onPressed: () => _playArtistSongList(shuffle: false),
-          icon: Icon(Icons.play_arrow, size: _iconSize),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTrack(AlbumSongsDto albumSongs) {
-    final album = albumSongs.album;
+  Widget _buildTrack(AppLocalizations locale, AlbumSongsDto albumSongs) {
+    final album =
+        albumSongs.album ??
+        Album(name: locale.translate(.generic, "singles"), reference: "");
     final songs = albumSongs.songs;
 
     return LayoutBuilder(
@@ -178,19 +161,41 @@ class _ArtistPageState extends State<ArtistPage> {
     );
   }
 
-  Widget _buildAlbumList(double width) {
+  Widget _buildButtons() {
+    return Row(
+      mainAxisAlignment: .end,
+      children: [
+        // NOTE: check when should this be hidden for artists
+        IconButton(
+          onPressed: () => {},
+          icon: Icon(Icons.download, size: _iconSize),
+        ),
+        IconButton(
+          onPressed: () => _playArtistSongList(shuffle: true),
+          icon: Icon(Icons.shuffle, size: _iconSize),
+        ),
+        IconButton(
+          onPressed: () => _playArtistSongList(shuffle: false),
+          icon: Icon(Icons.play_arrow, size: _iconSize),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlbumList(AppLocalizations locale, double width) {
     final count = width > 1024 ? 3 : 2;
     final imageWidth = (width - (count + 1) * _paddingSize) / count;
-    final albums = _albumSongs
-        .map(
-          (as) => AlbumCard(
-            as.album,
-            imageSize: imageWidth,
-            showArtistText: false,
-            onTap: () => _onAlbumPressed(as.album),
-          ),
-        )
-        .toList();
+    final albums = _albumSongs.map((as) {
+      final album =
+          as.album ??
+          Album(name: locale.translate(.generic, "singles"), reference: "");
+      return AlbumCard(
+        album,
+        imageSize: imageWidth,
+        showArtistText: false,
+        onTap: () => _onAlbumPressed(album),
+      );
+    }).toList();
 
     return SingleChildScrollView(
       child: Container(

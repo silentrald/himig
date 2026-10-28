@@ -1,0 +1,1 @@
+Background service is removed since pinging in intervals consumes more of the phone's battery life, left the code for now if the service is needed (maybe as a configuration in settings and let the user opt-in).

@@ -20,6 +20,7 @@ generic:
   remote: リモート
   scan: スキャン
   settings: 設定
+  singles: シングルス
   tracks: トラック
   unknown: 不明
   update: アップデート

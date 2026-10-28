@@ -7,9 +7,6 @@ import "package:himig/backend/repos/artist/sqflite.dart";
 import "package:himig/backend/repos/song/sqflite.dart";
 import "package:himig/backend/repos/source/sqflite.dart";
 import "package:himig/backend/repos/sqflite.dart";
-import "package:himig/backend/services/background/desktop.dart";
-import "package:himig/backend/services/background/mobile.dart";
-import "package:himig/backend/services/background/types.dart";
 import "package:himig/backend/services/connection/connectivity_plus.dart";
 import "package:himig/backend/services/connection/types.dart";
 import "package:himig/backend/services/fetch/dio.dart";
@@ -90,11 +87,6 @@ Future<void> setup() async {
     return player;
   });
 
-  getIt.registerLazySingleton<BackgroundService>(
-    () => Platform.isAndroid || Platform.isIOS
-        ? MobileBackgroundService()
-        : DesktopBackgroundService(),
-  );
   getIt.registerLazySingleton<ConnectionService>(
     () => ConnectivityPlusConnectionService(),
   );

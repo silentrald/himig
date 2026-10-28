@@ -20,6 +20,7 @@ generic:
   remote: Remote
   scan: Scan
   settings: Settings
+  singles: Singles
   tracks: Tracks
   unknown: Unknown
   update: Update

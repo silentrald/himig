@@ -1,9 +1,6 @@
-import "dart:convert";
-
 import "package:flutter/material.dart";
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/entities/artist.dart";
-import "package:himig/backend/services/background/types.dart";
 import "package:himig/backend/services/connection/types.dart";
 import "package:himig/backend/use_cases/home/types.dart";
 import "package:himig/frontend/components/cards/album_card.dart";
@@ -24,7 +21,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _homeUseCase = getInject<HomeUseCase>();
-  final _backgroundService = getInject<BackgroundService>();
   final _connectionService = getInject<ConnectionService>();
 
   final _albumController = ScrollController();
@@ -53,6 +49,7 @@ class _HomePageState extends State<HomePage> {
         _artists.clear();
       });
 
+      // TODO: combine the calls here into 1
       final albumResult = await _homeUseCase.getAlbumList(page: _albumPage);
       if (albumResult is ResultError) {
         logger.error("Could not get album list", error: albumResult.error);
@@ -133,15 +130,6 @@ class _HomePageState extends State<HomePage> {
         setState(() => _artists.addAll(newArtists));
       }
     });
-
-    _sourcesListener = _backgroundService.listen(
-      "listen",
-      (data) => setState(
-        () => (jsonDecode(data?["data"]) as Map<String, dynamic>).forEach(
-          (key, value) => _connectedSources[int.parse(key)] = value,
-        ),
-      ),
-    );
 
     _connectivityListener = _connectionService.onConnectionChange(
       (connected) => setState(() => _connected = connected),

@@ -1,4 +1,5 @@
 import "package:flutter/foundation.dart";
+import "package:himig/backend/dtos/simple_song.dart";
 import "package:himig/backend/entities/song.dart";
 
 enum PlayerRepeat { none, all, one }
