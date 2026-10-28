@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/dtos/simple_song.dart";
 
 class NowPlayingPage extends StatefulWidget {
   final SimpleSong song;

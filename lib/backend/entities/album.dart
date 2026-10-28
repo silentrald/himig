@@ -1,3 +1,6 @@
+import "dart:convert";
+
+import "package:flutter/foundation.dart";
 import "package:himig/backend/errors/multi_project_error.dart";
 import "package:himig/backend/errors/project_error.dart";
 import "package:himig/utils/result.dart";
@@ -100,4 +103,27 @@ class Album {
   int? get localSourceId => _localSourceId;
   int? get remoteSourceId => _remoteSourceId;
   int get sourceId => _localSourceId ?? _remoteSourceId ?? 0;
+
+  Map<String, dynamic> _toJson() => {
+    "id": id,
+    "name": name,
+    "artistId": artistId,
+    "artistName": artistName,
+    "localSourceId": _localSourceId,
+    "remoteSourceId": _remoteSourceId,
+    "reference": reference,
+    "releaseYear": releaseYear,
+    "coverArtUri": coverArtUri?.toString(),
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Album && mapEquals(_toJson(), other._toJson()));
+
+  @override
+  int get hashCode => id;
+
+  @override
+  String toString() => jsonEncode(_toJson());
 }

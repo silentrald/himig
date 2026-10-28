@@ -1,3 +1,6 @@
+import "dart:convert";
+
+import "package:flutter/foundation.dart";
 import "package:himig/backend/errors/multi_project_error.dart";
 import "package:himig/backend/errors/project_error.dart";
 import "package:himig/utils/result.dart";
@@ -117,6 +120,76 @@ class Song {
     );
   }
 
+  Result<Song> copyWith({
+    int? id,
+    String? title,
+    String? albumName,
+    String? artistName,
+    Duration? duration,
+    String? reference,
+    int? releaseYear,
+    int? localSourceId,
+    Uri? localUri,
+    int? remoteSourceId,
+    Uri? remoteUri,
+    Uri? coverArtUri,
+    int? albumId,
+    int? artistId,
+  }) {
+    final List<ProjectError> errors = [];
+    ProjectError? error;
+
+    localSourceId ??= _localSourceId;
+    localUri ??= _localUri;
+    remoteSourceId ??= _remoteSourceId;
+    remoteUri ??= _remoteUri;
+
+    final localReference = localSourceId != null || localUri != null;
+    final remoteReference = remoteSourceId != null || remoteUri != null;
+    if (localReference) {
+      error = validatePair(localSourceId, localUri, true);
+      if (error != null) {
+        errors.add(error);
+      }
+    }
+
+    if (remoteReference) {
+      error = validatePair(remoteSourceId, remoteUri, false);
+      if (error != null) {
+        errors.add(error);
+      }
+    }
+
+    if (localReference || remoteReference) {
+      error = validateSources(
+        localSourceId,
+        localUri,
+        remoteSourceId,
+        remoteUri,
+      );
+      if (error != null) {
+        errors.add(error);
+      }
+    }
+
+    return Result.ok(
+      Song(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        albumName: albumName ?? this.albumName,
+        artistName: artistName ?? this.artistName,
+        duration: duration ?? this.duration,
+        reference: reference ?? this.reference,
+        releaseYear: releaseYear ?? this.releaseYear,
+        localSourceId: localSourceId,
+        localUri: localUri,
+        remoteSourceId: remoteSourceId,
+        remoteUri: remoteUri,
+        coverArtUri: coverArtUri ?? this.coverArtUri,
+      ),
+    );
+  }
+
   int? get localSourceId => _localSourceId;
   Uri? get localUri => _localUri;
   int? get remoteSourceId => _remoteSourceId;
@@ -141,18 +214,32 @@ class Song {
     }
     return error;
   }
-}
 
-class SimpleSong {
-  final String title;
-  final String? artist;
-  final Uri? coverArtUri;
-  final Duration? duration;
+  Map<String, dynamic> _toJson() => {
+    "id": id,
+    "title": title,
+    "albumName": albumName,
+    "artistName": artistName,
+    "duration": duration.inMilliseconds,
+    "reference": reference,
+    "releaseYear": releaseYear,
+    "localSourceId": _localSourceId,
+    "localUri": _localUri,
+    "remoteSourceId": _remoteSourceId,
+    "remoteUri": _remoteUri,
+    "coverArtUri": coverArtUri?.toString(),
+    "albumId": albumId,
+    "artistId": artistId,
+  };
 
-  SimpleSong({
-    required this.title,
-    this.artist,
-    this.coverArtUri,
-    this.duration,
-  });
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Song && mapEquals(_toJson(), other._toJson()));
+
+  @override
+  int get hashCode => id;
+
+  @override
+  String toString() => jsonEncode(_toJson());
 }

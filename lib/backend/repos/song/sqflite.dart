@@ -64,7 +64,7 @@ LIMIT ?, ?
   );
 
   @override
-  FutureResult<List<Song>> getSongsByAlbum(RepoClient client, int albumId) =>
+  FutureResult<List<Song>> getSongListByAlbum(RepoClient client, int albumId) =>
       _getSongListHelper(
         client,
         """
@@ -82,10 +82,12 @@ WHERE s.album_id = ?
       );
 
   @override
-  FutureResult<List<Song>> getSongsByArtist(RepoClient client, int artistId) =>
-      _getSongListHelper(
-        client,
-        """
+  FutureResult<List<Song>> getSongListByArtist(
+    RepoClient client,
+    int artistId,
+  ) => _getSongListHelper(
+    client,
+    """
 SELECT *,
   s.id as id,
   al.name as album_name,
@@ -95,9 +97,9 @@ FROM songs s
   LEFT JOIN artists ar ON ar.id = s.artist_id
 WHERE s.artist_id = ?
     """
-            .trim(),
-        [artistId],
-      );
+        .trim(),
+    [artistId],
+  );
 
   @override
   FutureResult<Song> insertSong(RepoClient client, Song song) async {

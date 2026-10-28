@@ -29,7 +29,7 @@ class _AlbumPageState extends State<AlbumPage> {
   List<Song> _songs = [];
 
   Future<void> _load() async {
-    final result = await _albumUseCase.getSongsByAlbum(widget.album.id);
+    final result = await _albumUseCase.getSongListByAlbum(widget.album.id);
     if (result is ResultError) {
       logger.error("Could not load songs ${result.error}");
       return;

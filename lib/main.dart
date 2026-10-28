@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
-import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/dtos/simple_song.dart";
 import "package:himig/backend/services/background/main.dart";
 import "package:himig/backend/services/player/types.dart";
 import "package:himig/constant.dart" as constant;

@@ -23,8 +23,8 @@ class AlbumUseCaseV1 extends AlbumUseCase {
   });
 
   @override
-  Future<Result<List<Song>>> getSongsByAlbum(int albumId) {
-    return _songRepo.getSongsByAlbum(_database.client, albumId);
+  Future<Result<List<Song>>> getSongListByAlbum(int albumId) {
+    return _songRepo.getSongListByAlbum(_database.client, albumId);
   }
 
   @override
@@ -39,7 +39,7 @@ class AlbumUseCaseV1 extends AlbumUseCase {
     final localSource = AppState().getSource(remoteSource.localSourceId!);
 
     return await _database.startTransaction((client) async {
-      final songsResult = await _songRepo.getSongsByAlbum(client, album.id);
+      final songsResult = await _songRepo.getSongListByAlbum(client, album.id);
       if (songsResult is ResultError) {
         return Result.error(songsResult.error);
       }

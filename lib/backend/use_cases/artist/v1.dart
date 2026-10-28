@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import "package:himig/backend/dtos/album_songs.dart";
 import "package:himig/backend/repos/album/types.dart";
 import "package:himig/backend/repos/song/types.dart";
@@ -29,7 +30,7 @@ class ArtistUseCaseV1 extends ArtistUseCase {
         return albumResult.toError();
       }
 
-      final songResult = await _songRepo.getSongsByArtist(client, artistId);
+      final songResult = await _songRepo.getSongListByArtist(client, artistId);
       if (songResult is ResultError) {
         return songResult.toError();
       }
@@ -45,6 +46,22 @@ class ArtistUseCaseV1 extends ArtistUseCase {
               .toList(),
         );
         list.add(albumSongs);
+      }
+
+      // Join singles (album id is null)
+      final singles = songResult.value
+          .where((song) => song.albumId == null)
+          .sortedBy((song) => song.title)
+          .toList();
+      if (singles.isNotEmpty) {
+        list.add(
+          AlbumSongsDto(
+            songs: songResult.value
+                .where((song) => song.albumId == null)
+                .sortedBy((song) => song.title)
+                .toList(),
+          ),
+        );
       }
 
       return Result.ok(list);

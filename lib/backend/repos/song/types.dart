@@ -8,8 +8,8 @@ abstract class SongRepo {
     int page = 1,
     int count = 20,
   });
-  FutureResult<List<Song>> getSongsByAlbum(RepoClient client, int albumId);
-  FutureResult<List<Song>> getSongsByArtist(RepoClient client, int artistId);
+  FutureResult<List<Song>> getSongListByAlbum(RepoClient client, int albumId);
+  FutureResult<List<Song>> getSongListByArtist(RepoClient client, int artistId);
 
   FutureResult<Song> insertSong(RepoClient client, Song song);
   FutureResult<Song> updateSong(RepoClient client, Song song);

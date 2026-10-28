@@ -1,3 +1,7 @@
+import "dart:convert";
+
+import "package:flutter/foundation.dart";
+
 class Artist {
   int id;
   String name;
@@ -10,4 +14,21 @@ class Artist {
     name: name ?? this.name,
     imageUri: imageUri ?? this.imageUri,
   );
+
+  Map<String, dynamic> _toJson() => {
+    "id": id,
+    "name": name,
+    "imageUri": imageUri?.toString(),
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Artist && mapEquals(_toJson(), other._toJson()));
+
+  @override
+  int get hashCode => id;
+
+  @override
+  String toString() => jsonEncode(_toJson());
 }

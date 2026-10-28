@@ -1,8 +1,7 @@
 import "dart:async";
-import "dart:io";
 
 import "package:flutter/material.dart";
-import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/dtos/simple_song.dart";
 import "package:himig/backend/services/player/types.dart";
 import "package:himig/frontend/components/generic/overflow_text.dart";
 import "package:himig/frontend/components/generic/uri_image.dart";

@@ -1,5 +1,6 @@
 import "dart:convert";
 
+import "package:flutter/foundation.dart";
 import "package:himig/backend/errors/multi_project_error.dart";
 import "package:himig/backend/errors/project_error.dart";
 import "package:himig/constant.dart" as constant;
@@ -111,6 +112,24 @@ class FolderSource extends Source {
   String serialize() {
     return jsonEncode({"path": _path, "writeable": _writeable});
   }
+
+  Map<String, dynamic> _toJson() => {
+    "id": _id,
+    "name": _name,
+    "path": _path,
+    "writeable": _writeable,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FolderSource && mapEquals(_toJson(), other._toJson()));
+
+  @override
+  int get hashCode => _id;
+
+  @override
+  String toString() => jsonEncode(_toJson());
 }
 
 /// API Implementations
@@ -127,7 +146,7 @@ class SubsonicSource extends Source {
 
   int? _localSourceId;
 
-  SubsonicSource._({
+  SubsonicSource({
     this._id = 0,
     required this._name,
     required this._https,
@@ -148,7 +167,7 @@ class SubsonicSource extends Source {
   }) {
     final https = address.startsWith("https://");
     final salt = getRandomString(saltLength);
-    return SubsonicSource._(
+    return SubsonicSource(
       name: name,
       https: address.startsWith("https://"),
       host: address.substring(https ? 8 : 7),
@@ -163,7 +182,7 @@ class SubsonicSource extends Source {
     required int id,
     required String name,
     required Map<String, dynamic> json,
-  }) => SubsonicSource._(
+  }) => SubsonicSource(
     id: id,
     name: name,
     https: json["https"],
@@ -177,8 +196,9 @@ class SubsonicSource extends Source {
   // === Validation Checks === //
 
   static ProjectError? validateName(String name) {
-    if (name.isEmpty)
+    if (name.isEmpty) {
       return ProjectError(.entitySource, "subsonicNameRequired");
+    }
     return null;
   }
 
@@ -250,10 +270,6 @@ class SubsonicSource extends Source {
     final List<ProjectError> errors = [];
     ProjectError? error;
 
-    name ??= _name;
-    username ??= _username;
-    localSourceId ??= _localSourceId;
-
     bool isHttps = _https;
     String host = _host;
     if (address != null) {
@@ -282,8 +298,12 @@ class SubsonicSource extends Source {
       return Result.error(MultiProjectError(errors));
     }
 
+    name ??= _name;
+    username ??= _username;
+    localSourceId ??= _localSourceId;
+
     return Result.ok(
-      SubsonicSource._(
+      SubsonicSource(
         id: id ?? _id,
         name: name,
         https: isHttps,
@@ -382,4 +402,26 @@ class SubsonicSource extends Source {
       "localSourceId": _localSourceId,
     });
   }
+
+  Map<String, dynamic> _toJson() => {
+    "id": _id,
+    "name": _name,
+    "https": _https,
+    "host": _host,
+    "username": _username,
+    "password": _hashedPassword,
+    "salt": _salt,
+    "localSourceId": _localSourceId,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SubsonicSource && mapEquals(_toJson(), other._toJson()));
+
+  @override
+  int get hashCode => _id;
+
+  @override
+  String toString() => jsonEncode(_toJson());
 }

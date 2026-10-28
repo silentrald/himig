@@ -2,6 +2,7 @@ import "dart:math";
 
 import "package:audio_service/audio_service.dart";
 import "package:flutter/foundation.dart";
+import "package:himig/backend/dtos/simple_song.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/services/player/types.dart";
 import "package:himig/utils/logger.dart" as logger;
