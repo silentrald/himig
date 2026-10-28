@@ -137,7 +137,7 @@ WHERE s.artist_id = ?
       _tableName,
       {
         "title": song.title,
-        "duration": song.duration,
+        "duration": song.duration.inMilliseconds,
         "reference": song.reference,
         "release_year": song.releaseYear,
         "local_source_id": song.localSourceId,

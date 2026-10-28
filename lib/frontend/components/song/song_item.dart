@@ -8,7 +8,7 @@ class SongItem extends StatelessWidget {
   final VoidCallback? _onTap;
 
   final _iconSize = 16.0;
-  final _padding = 16.0;
+  final _padding = 8.0;
 
   const SongItem(this._song, {super.key, required this._width, this._onTap});
 
@@ -27,7 +27,7 @@ class SongItem extends StatelessWidget {
       textDirection: TextDirection.ltr,
     )..layout()).size.width;
 
-    var textWidth = _width - (_padding * 2) - durationWidth - 1.0;
+    var textWidth = _width - (_padding * 3) - durationWidth - 1.0;
     if (_song.localUri != null && _song.remoteUri != null) {
       textWidth -= _iconSize;
     }
@@ -44,6 +44,9 @@ class SongItem extends StatelessWidget {
             Row(
               children: [
                 ?_buildIcon(),
+
+                SizedBox(width: _padding),
+
                 Text(durationText, textAlign: .right),
               ],
             ),
