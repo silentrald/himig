@@ -49,24 +49,16 @@ class _HomePageState extends State<HomePage> {
         _artists.clear();
       });
 
-      // TODO: combine the calls here into 1
-      final albumResult = await _homeUseCase.getAlbumList(page: _albumPage);
-      if (albumResult is ResultError) {
-        logger.error("Could not get album list", error: albumResult.error);
+      final result = await _homeUseCase.getInitialData();
+      if (result is ResultError) {
+        logger.error("Could not load home data", error: result.error);
         return;
       }
 
-      final artistResult = await _homeUseCase.getArtistList(page: _artistPage);
-      if (artistResult is ResultError) {
-        logger.error("Could not get artist list", error: artistResult.error);
-        return;
-      }
-
-      // TODO: get the _connectedSources data here
-
+      final value = result.value;
       setState(() {
-        _albums.addAll(albumResult.value);
-        _artists.addAll(artistResult.value);
+        _albums.addAll(value.albums);
+        _artists.addAll(value.artists);
       });
     });
   }
