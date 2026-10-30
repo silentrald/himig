@@ -20,4 +20,6 @@ class AppState {
 
   List<Source> get writeableSources =>
       _sources.values.where((s) => s.writeable).toList();
+
+  void clearSources() => _sources.clear();
 }

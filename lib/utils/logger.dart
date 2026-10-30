@@ -40,11 +40,11 @@ void error(String message, {Exception? error}) {
   }
 }
 
-void warn(String message) {
+void warn(String message, {Exception? error}) {
   if (kReleaseMode) {
-    _warnProd(message);
+    _warnProd(message, error: error);
   } else {
-    _warnDev(message);
+    _warnDev(message, error: error);
   }
 }
 
@@ -79,12 +79,13 @@ void _errorDev(String message, {Exception? error}) {
   if (error != null) print(error);
 }
 
-void _warnDev(String message) {
+void _warnDev(String message, {Exception? error}) {
   if (_level.value < Level.warn.value) {
     return;
   }
 
   print("${_getCurrentDateString()} \x1B[33mWARN\x1B[0m: $message");
+  if (error != null) print(error);
 }
 
 void _infoDev(String message) {
@@ -113,7 +114,7 @@ void _errorProd(String message, {Exception? error}) {
   // TODO:
 }
 
-void _warnProd(String message) {
+void _warnProd(String message, {Exception? error}) {
   // TODO:
 }
 

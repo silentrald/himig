@@ -47,6 +47,8 @@ class _HomePageState extends State<HomePage> {
 
         _artistPage = 1;
         _artists.clear();
+
+        _connectedSources.clear();
       });
 
       final result = await _homeUseCase.getInitialData();
@@ -59,6 +61,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _albums.addAll(value.albums);
         _artists.addAll(value.artists);
+        _connectedSources.addAll(value.connectedSources);
       });
     });
   }

@@ -97,6 +97,8 @@ Future<void> setup() async {
       database: database,
       albumRepo: albumRepo,
       artistRepo: artistRepo,
+      appState: AppState(),
+      sourceService: sourceService,
     ),
   );
   getIt.registerLazySingleton<AlbumUseCase>(

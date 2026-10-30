@@ -13,4 +13,6 @@ abstract class HomeUseCase {
     int count = 20,
     AlbumSort sort = AlbumSort.recentlyAdded,
   });
+
+  FutureResult<Map<int, bool>> getConnectedSources();
 }

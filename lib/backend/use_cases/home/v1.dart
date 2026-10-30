@@ -4,7 +4,10 @@ import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/repos/album/types.dart";
 import "package:himig/backend/repos/artist/types.dart";
 import "package:himig/backend/repos/types.dart";
+import "package:himig/backend/services/source/types.dart";
 import "package:himig/backend/use_cases/home/types.dart";
+import "package:himig/state.dart";
+import "package:himig/utils/logger.dart" as logger;
 import "package:himig/utils/result.dart";
 
 class HomeUseCaseV1 extends HomeUseCase {
@@ -12,10 +15,15 @@ class HomeUseCaseV1 extends HomeUseCase {
   final AlbumRepo _albumRepo;
   final ArtistRepo _artistRepo;
 
+  final AppState _appState;
+  final SourceService _sourceService;
+
   HomeUseCaseV1({
     required this._database,
     required this._albumRepo,
     required this._artistRepo,
+    required this._appState,
+    required this._sourceService,
   });
 
   @override
@@ -30,10 +38,17 @@ class HomeUseCaseV1 extends HomeUseCase {
       return artistResult.toError();
     }
 
-    // TODO: get the _connectedSources data here
+    final connectedResult = await getConnectedSources();
+    if (connectedResult is ResultError) {
+      return connectedResult.toError();
+    }
 
     return Result.ok(
-      HomeData(artists: artistResult.value, albums: albumResult.value),
+      HomeData(
+        artists: artistResult.value,
+        albums: albumResult.value,
+        connectedSources: connectedResult.value,
+      ),
     );
   }
 
@@ -52,4 +67,24 @@ class HomeUseCaseV1 extends HomeUseCase {
     count: count,
     sort: sort,
   );
+
+  @override
+  FutureResult<Map<int, bool>> getConnectedSources() async {
+    final Map<int, bool> connectedSources = {};
+    for (final source in _appState.sourceList) {
+      final connectedResult = await _sourceService.isConnected(source);
+      if (connectedResult is ResultError) {
+        logger.warn(
+          "Could not connect to source service due to an error",
+          error: connectedResult.error,
+        );
+        connectedSources[source.id] = false;
+        continue;
+      }
+
+      connectedSources[source.id] = connectedResult.value;
+    }
+
+    return Result.ok(connectedSources);
+  }
 }
