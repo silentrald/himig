@@ -1,5 +1,6 @@
 import "package:collection/collection.dart";
 import "package:himig/backend/dtos/album_songs.dart";
+import "package:himig/backend/helpers/cache/types.dart";
 import "package:himig/backend/repos/album/types.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/backend/repos/types.dart";
@@ -10,11 +11,13 @@ class ArtistUseCaseV1 extends ArtistUseCase {
   final RepoDatabase _database;
   final AlbumRepo _albumRepo;
   final SongRepo _songRepo;
+  final CacheHelper _cacheHelper;
 
   ArtistUseCaseV1({
     required this._database,
     required this._albumRepo,
     required this._songRepo,
+    required this._cacheHelper,
   });
 
   @override
@@ -67,4 +70,8 @@ class ArtistUseCaseV1 extends ArtistUseCase {
       return Result.ok(list);
     });
   }
+
+  @override
+  FutureResult<void> cacheArtist(int artistId) =>
+      _cacheHelper.cacheArtist(artistId);
 }

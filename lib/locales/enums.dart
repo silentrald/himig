@@ -5,4 +5,7 @@ enum ErrorLocaleKey {
   entityAlbum,
   entitySong,
   entitySource,
+
+  // Services
+  serviceSource,
 }

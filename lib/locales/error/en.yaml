@@ -14,3 +14,7 @@ entitySource:
   subsonicAddressRequired: "Address is required"
   subsonicAddressProtocol: "Address should start with 'http' or 'https'"
 
+serviceSource:
+  noLocalSource: No local source for {name}.
+  noLocalSources: Could not find any local sources.
+  noLocalSourceUri: Could not create local soure uri with {name}.

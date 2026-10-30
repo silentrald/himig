@@ -38,13 +38,20 @@ class _ArtistPageState extends State<ArtistPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final result = await _artistUseCase.getAlbumSongsList(widget.artist.id);
-      if (result is ResultError) {
-        logger.error("Could not get album/songs list", error: result.error);
-        return;
-      }
+      _load();
+    });
+  }
 
-      setState(() => _albumSongs.addAll(result.value));
+  Future<void> _load() async {
+    final result = await _artistUseCase.getAlbumSongsList(widget.artist.id);
+    if (result is ResultError) {
+      logger.error("Could not get album/songs list", error: result.error);
+      return;
+    }
+
+    setState(() {
+      _albumSongs.clear();
+      _albumSongs.addAll(result.value);
     });
   }
 
@@ -63,6 +70,15 @@ class _ArtistPageState extends State<ArtistPage> {
     }
 
     await _playerService.playSongList(songs, index: index);
+  }
+
+  Future<void> _cache() async {
+    final result = await _artistUseCase.cacheArtist(widget.artist.id);
+    if (result is ResultError) {
+      logger.error("Could not cache artist's songs", error: result.error);
+    }
+
+    _load();
   }
 
   Future<void> _playArtistSongList({required bool shuffle}) async {
@@ -167,7 +183,7 @@ class _ArtistPageState extends State<ArtistPage> {
       children: [
         // NOTE: check when should this be hidden for artists
         IconButton(
-          onPressed: () => {},
+          onPressed: () => _cache(),
           icon: Icon(Icons.download, size: _iconSize),
         ),
         IconButton(

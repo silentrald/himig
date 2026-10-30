@@ -151,6 +151,7 @@ class SubsonicSourceImplementation
         }),
         albumId: album.id,
         artistId: album.artistId,
+        // TODO: song["suffix"] <- extension name
       );
       if (createResult is ResultError) {
         logger.warn(

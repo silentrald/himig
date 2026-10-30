@@ -2,6 +2,7 @@ import "dart:io";
 
 import "package:get_it/get_it.dart";
 import "package:himig/backend/database/main.dart";
+import "package:himig/backend/helpers/cache/v1.dart";
 import "package:himig/backend/repos/album/sqflite.dart";
 import "package:himig/backend/repos/artist/sqflite.dart";
 import "package:himig/backend/repos/song/sqflite.dart";
@@ -91,6 +92,15 @@ Future<void> setup() async {
     () => ConnectivityPlusConnectionService(),
   );
 
+  // Helpers
+  final cacheHelper = CacheHelperV1(
+    appState: AppState(),
+    database: database,
+    songRepo: songRepo,
+    fetchService: fetchService,
+    sourceService: sourceService,
+  );
+
   // UseCases
   getIt.registerLazySingleton<HomeUseCase>(
     () => HomeUseCaseV1(
@@ -105,8 +115,7 @@ Future<void> setup() async {
     () => AlbumUseCaseV1(
       database: database,
       songRepo: songRepo,
-      fetchService: fetchService,
-      sourceService: sourceService,
+      cacheHelper: cacheHelper,
     ),
   );
   getIt.registerLazySingleton<ArtistUseCase>(
@@ -114,6 +123,7 @@ Future<void> setup() async {
       database: database,
       albumRepo: albumRepo,
       songRepo: songRepo,
+      cacheHelper: cacheHelper,
     ),
   );
   final settingsUseCase = SettingsUseCaseV1(
