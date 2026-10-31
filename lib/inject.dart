@@ -17,6 +17,8 @@ import "package:himig/backend/services/player/types.dart";
 import "package:himig/backend/services/source/folder.dart";
 import "package:himig/backend/services/source/subsonic.dart";
 import "package:himig/backend/services/source/v1.dart";
+import "package:himig/backend/services/storage/shared_preferences.dart";
+import "package:himig/backend/services/storage/types.dart";
 import "package:himig/backend/use_cases/album/types.dart";
 import "package:himig/backend/use_cases/album/v1.dart";
 import "package:himig/backend/use_cases/artist/types.dart";
@@ -80,8 +82,9 @@ Future<void> setup() async {
     subsonicSourceImpl: subsonicSourceImpl,
   );
 
-  //final storageService = SharedPreferenceStorageService();
-
+  getIt.registerLazySingleton<StorageService>(
+    () => SharedPreferenceStorageService(),
+  );
   getIt.registerSingletonAsync<PlayerService>(() async {
     final player = MainPlayerService();
     await player.init("com.silentrald.himig.channel.audio", "Himig");

@@ -2,7 +2,21 @@ import "package:flutter/foundation.dart";
 import "package:himig/backend/dtos/simple_song.dart";
 import "package:himig/backend/entities/song.dart";
 
-enum PlayerRepeat { none, all, one }
+enum PlayerRepeat {
+  none,
+  all,
+  one;
+
+  static PlayerRepeat of(String? code) {
+    for (final repeat in PlayerRepeat.values) {
+      if (repeat.name == code) {
+        return repeat;
+      }
+    }
+
+    return PlayerRepeat.none;
+  }
+}
 
 // Separate this to another class
 class PlayerStatus {

@@ -10,10 +10,10 @@ class SharedPreferenceStorageService extends StorageService {
   }
 
   @override
-  Future<String?> getString(StorageKey key) async {
+  Future<String?> getString(StorageKey key, [String? defaultValue]) async {
     try {
       final sp = await SharedPreferences.getInstance();
-      return sp.getString(key.name);
+      return sp.getString(key.name) ?? defaultValue;
     } catch (error) {
       logger.error(error.toString());
       return null;

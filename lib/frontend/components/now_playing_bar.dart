@@ -3,6 +3,7 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:himig/backend/dtos/simple_song.dart";
 import "package:himig/backend/services/player/types.dart";
+import "package:himig/backend/services/storage/types.dart";
 import "package:himig/frontend/components/generic/overflow_text.dart";
 import "package:himig/frontend/components/generic/uri_image.dart";
 import "package:himig/inject.dart";
@@ -26,6 +27,7 @@ class NowPlayingBar extends StatefulWidget {
 }
 
 class _NowPlayingBarState extends State<NowPlayingBar> {
+  final _storageService = getInject<StorageService>();
   final _playerService = getInject<PlayerService>();
 
   final _imageSize = 50.0;
@@ -52,10 +54,26 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
     // Start the interval since a song is selected
     _startInterval();
 
+    _initRepeatMode();
+
     _onStatusChanged = _playerService.onStatusChanged((playerStatus) {
       // There is some lag
-      setState(() => _status = playerStatus);
+      setState(() {
+        _status = playerStatus;
+      });
     });
+  }
+
+  Future<void> _initRepeatMode() async {
+    final repeatString = await _storageService.getString(
+      .repeatMode,
+      PlayerRepeat.none.name,
+    );
+    final repeat = PlayerRepeat.of(repeatString);
+
+    setState(() => _status.repeat = repeat);
+    await _playerService.setRepeat(repeat);
+    await _storageService.setString(.repeatMode, _status.repeat.name);
   }
 
   @override
@@ -123,11 +141,12 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
   //_playerService.setShuffle(!_shuffle);
   //}
 
-  void _onRepeatPressed() {
+  void _onRepeatPressed() async {
     // Needs to be updated since there is some noticeable lag when this
     //   is emitted in the playbackStatus event.
     setState(() => _status.nextRepeatMode());
-    _playerService.setRepeat(_status.repeat);
+    await _playerService.setRepeat(_status.repeat);
+    await _storageService.setString(.repeatMode, _status.repeat.name);
   }
 
   @override
