@@ -1,5 +1,6 @@
 import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/repos/artist/types.dart";
+import "package:himig/backend/repos/sqflite.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 
@@ -64,7 +65,6 @@ class SqfliteArtistRepo extends ArtistRepo {
   }
 
   @override
-  FutureResult<int> deleteAllArtists(RepoClient client) async {
-    return await client.delete(_tableName);
-  }
+  FutureResult<int> deleteAllArtists(RepoClient client) =>
+      deleteAllAndResetTable(client, _tableName);
 }

@@ -128,3 +128,31 @@ class SqfliteRepoDatabase extends RepoDatabase {
     }
   }
 }
+
+/* === Helper Functions === */
+
+FutureResult<int> deleteAllAndResetTable(
+  RepoClient client,
+  String tableName,
+) async {
+  assert(
+    client.transaction,
+    "$tableName should be deleted with a client transaction",
+  );
+
+  final countResult = await client.delete(tableName);
+  if (countResult is ResultError) {
+    return countResult;
+  }
+
+  final result = await client.update(
+    "sqlite_sequence",
+    {"seq": 0},
+    {"name": tableName},
+  );
+  if (result is ResultError) {
+    return result;
+  }
+
+  return countResult;
+}

@@ -1,5 +1,6 @@
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/repos/album/types.dart";
+import "package:himig/backend/repos/sqflite.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/utils/result.dart";
 
@@ -98,7 +99,6 @@ ORDER BY release_year DESC, name
   }
 
   @override
-  FutureResult<int> deleteAllAlbums(RepoClient client) async {
-    return await client.delete(_tableName);
-  }
+  FutureResult<int> deleteAllAlbums(RepoClient client) =>
+      deleteAllAndResetTable(client, _tableName);
 }

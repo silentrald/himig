@@ -1,4 +1,5 @@
 import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/repos/sqflite.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/utils/result.dart";
@@ -165,7 +166,6 @@ WHERE s.artist_id = ?
   }
 
   @override
-  FutureResult<int> deleteAllSongs(RepoClient client) async {
-    return await client.delete(_tableName);
-  }
+  FutureResult<int> deleteAllSongs(RepoClient client) =>
+      deleteAllAndResetTable(client, _tableName);
 }

@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "package:himig/backend/entities/source.dart";
+import "package:himig/backend/repos/sqflite.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/repos/source/types.dart";
 import "package:himig/utils/logger.dart" as logger;
@@ -93,7 +94,6 @@ class SqfliteSourceRepo extends SourceRepo {
   }
 
   @override
-  Future<Result<int>> deleteAllSources(RepoClient client) async {
-    return await client.delete(_tableName);
-  }
+  Future<Result<int>> deleteAllSources(RepoClient client) =>
+      deleteAllAndResetTable(client, _tableName);
 }
