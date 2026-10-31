@@ -47,8 +47,9 @@ void main() {
       version <= constant.databaseVersion;
       ++version
     ) {
+      Database? sqfliteDatabase;
       try {
-        final sqfliteDatabase = await openDatabase(
+        sqfliteDatabase = await openDatabase(
           "test.sql",
           version: version,
           onCreate: onCreateDatabase,
@@ -61,25 +62,30 @@ void main() {
         for (final query in upgradePath[version] ?? []) {
           await sqfliteDatabase.execute(query);
         }
-
-        await sqfliteDatabase.close();
-      } on Exception catch (error) {
-        fail("Upgrade issue v${version - 1} -> v$version due to $error");
+      } on Exception catch (_) {
+        // Error already logged
+        fail("Upgrade issue v${version - 1} -> v$version");
+      } finally {
+        await sqfliteDatabase?.close();
       }
     }
   });
 
   test("Database full v${constant.databaseVersion}", () async {
-    final sqfliteDatabase = await openDatabase(
-      "test.sql",
-      version: constant.databaseVersion,
-      onCreate: onCreateDatabase,
-      onUpgrade: onUpgradeDatabase,
-      onDowngrade: onDowngradeDatabase,
-    );
-    expect(await sqfliteDatabase.getVersion(), constant.databaseVersion);
-    expect(sqfliteDatabase.isOpen, isTrue);
-    await sqfliteDatabase.close();
+    Database? sqfliteDatabase;
+    try {
+      sqfliteDatabase = await openDatabase(
+        "test.sql",
+        version: constant.databaseVersion,
+        onCreate: onCreateDatabase,
+        onUpgrade: onUpgradeDatabase,
+        onDowngrade: onDowngradeDatabase,
+      );
+      expect(await sqfliteDatabase.getVersion(), constant.databaseVersion);
+      expect(sqfliteDatabase.isOpen, isTrue);
+    } finally {
+      await sqfliteDatabase?.close();
+    }
   });
 
   test("Database Downgrade v${constant.databaseVersion} -> v1", () async {
@@ -88,8 +94,9 @@ void main() {
       version >= minDatabaseVersion;
       --version
     ) {
+      Database? sqfliteDatabase;
       try {
-        final sqfliteDatabase = await openDatabase(
+        sqfliteDatabase = await openDatabase(
           "test.sql",
           version: version,
           onCreate: onCreateDatabase,
@@ -99,8 +106,11 @@ void main() {
         expect(await sqfliteDatabase.getVersion(), version);
         expect(sqfliteDatabase.isOpen, isTrue);
         await sqfliteDatabase.close();
-      } on Exception catch (error) {
-        fail("Downgrade issue v${version + 1} -> v$version due to $error");
+      } on Exception catch (_) {
+        // Error already logged
+        fail("Downgrade issue v${version + 1} -> v$version");
+      } finally {
+        await sqfliteDatabase?.close();
       }
     }
   });
