@@ -6,6 +6,7 @@ import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/use_cases/artist/v1.dart";
 import "package:himig/utils/result.dart";
 
+import "../mock/helpers/cache.dart";
 import "../mock/repos/album.dart";
 import "../mock/repos/main.dart";
 import "../mock/repos/song.dart";
@@ -15,10 +16,12 @@ void main() {
     final repoDatabase = MockRepoDatabase();
     final albumRepo = MockAlbumRepo();
     final songRepo = MockSongRepo();
+    final cacheHelper = MockCacheHelper();
     final artistUseCase = ArtistUseCaseV1(
       database: repoDatabase,
       albumRepo: albumRepo,
       songRepo: songRepo,
+      cacheHelper: cacheHelper,
     );
 
     final albumSongsList1 = [
@@ -33,6 +36,7 @@ void main() {
           Song(
             title: "some song 1",
             duration: Duration(seconds: 123),
+            fileExtension: "mp3",
             reference: "reference-song",
             albumId: 1,
             artistId: 1,
@@ -40,6 +44,7 @@ void main() {
           Song(
             title: "some song 2",
             duration: Duration(seconds: 124),
+            fileExtension: "mp3",
             reference: "reference-song",
             albumId: 1,
             artistId: 1,
@@ -47,6 +52,7 @@ void main() {
           Song(
             title: "some song 3",
             duration: Duration(seconds: 125),
+            fileExtension: "mp3",
             reference: "reference-song",
             albumId: 1,
             artistId: 1,
@@ -54,6 +60,7 @@ void main() {
           Song(
             title: "some song 4",
             duration: Duration(seconds: 126),
+            fileExtension: "mp3",
             reference: "reference-song",
             albumId: 1,
             artistId: 1,
@@ -71,6 +78,7 @@ void main() {
           Song(
             title: "other",
             duration: Duration(seconds: 120),
+            fileExtension: "flac",
             reference: "reference-song",
             albumId: 2,
             artistId: 1,
@@ -88,6 +96,7 @@ void main() {
             artistId: 2,
             title: "asdf",
             duration: Duration(seconds: 200),
+            fileExtension: "mp3",
             reference: "test",
           ),
         ],
@@ -99,6 +108,7 @@ void main() {
       artistId: 999,
       title: "a_something",
       duration: Duration(seconds: 999),
+      fileExtension: "mp3",
       reference: "asdf",
     );
     final singleSong2 = Song(
@@ -106,6 +116,7 @@ void main() {
       artistId: 999,
       title: "b_something",
       duration: Duration(seconds: 999),
+      fileExtension: "mp3",
       reference: "asdf",
     );
 

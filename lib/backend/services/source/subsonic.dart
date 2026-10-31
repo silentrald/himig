@@ -142,6 +142,7 @@ class SubsonicSourceImplementation
         title: song["title"],
         // Subsonic returns duration in seconds
         duration: Duration(seconds: song["duration"]),
+        fileExtension: song["suffix"],
         reference: id,
         releaseYear: song["year"],
         remoteSourceId: source.id,
@@ -151,7 +152,6 @@ class SubsonicSourceImplementation
         }),
         albumId: album.id,
         artistId: album.artistId,
-        // TODO: song["suffix"] <- extension name
       );
       if (createResult is ResultError) {
         logger.warn(

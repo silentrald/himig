@@ -6,19 +6,22 @@ import "package:himig/backend/database/full/songs.dart";
 import "package:himig/backend/database/full/source.dart";
 import "package:himig/backend/database/version.dart";
 import "package:himig/backend/database/versions/v1_init.dart";
+import "package:himig/backend/database/versions/v2_file_extension.dart";
+import "package:himig/constant.dart" as constant;
 import "package:sqflite/sqlite_api.dart";
 
-DatabaseVersion? _getDatabaseChanges(int version) {
-  switch (version) {
-    case 1:
-      return V1InitDatabaseVersion();
-
-    default:
-      return null;
-  }
-}
+DatabaseVersion? _getDatabaseChanges(int version) => switch (version) {
+  1 => V1InitDatabaseVersion(),
+  2 => V2FileExtensionDatabaseVersion(),
+  _ => null,
+};
 
 Future<void> onCreateDatabase(Database database, int version) async {
+  if (version != constant.databaseVersion) {
+    // Build the database from the scratch up until the current version
+    return onUpgradeDatabase(database, 0, version);
+  }
+
   // Enable foreign key support
   await database.execute("PRAGMA foreign_keys = ON");
 
@@ -37,7 +40,7 @@ Future<void> onUpgradeDatabase(
   int oldVersion,
   int newVersion,
 ) async {
-  for (var version = oldVersion; version <= newVersion; ++version) {
+  for (var version = oldVersion + 1; version <= newVersion; ++version) {
     for (var sql in _getDatabaseChanges(version)!.getUpgradeChanges()) {
       await database.execute(sql);
     }

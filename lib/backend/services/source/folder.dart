@@ -144,6 +144,7 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
         final songResult = Song.create(
           title: title,
           duration: metadata.duration ?? Duration.zero,
+          fileExtension: path.extension(file.path),
           reference: file.path,
           releaseYear: metadata.releaseYear,
           localSourceId: source.id,
@@ -169,13 +170,12 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
 
   @override
   Uri? getLocalSongUri(FolderSource source, Song song) {
-    // TODO: file extension, get from song
     return Uri.file(
       path.join(
         source.path,
         song.artistName,
         song.albumName,
-        "${song.title}.flac",
+        "${song.title}.${song.fileExtension}",
       ),
     );
   }

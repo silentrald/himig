@@ -17,6 +17,7 @@ class SqfliteSongRepo extends SongRepo {
       albumName: row["album_name"],
       artistName: row["artist_name"],
       duration: Duration(milliseconds: row["duration"]),
+      fileExtension: row["file_extension"],
       reference: row["reference"],
       releaseYear: row["release_year"],
       localSourceId: row["local_source_id"],
@@ -107,6 +108,7 @@ WHERE s.artist_id = ?
     final result = await client.insert(_tableName, {
       "title": song.title,
       "duration": song.duration.inMilliseconds,
+      "file_extension": song.fileExtension,
       "reference": song.reference,
       "release_year": song.releaseYear,
       "local_source_id": song.localSourceId,
@@ -139,6 +141,7 @@ WHERE s.artist_id = ?
       {
         "title": song.title,
         "duration": song.duration.inMilliseconds,
+        "file_extension": song.fileExtension,
         "reference": song.reference,
         "release_year": song.releaseYear,
         "local_source_id": song.localSourceId,

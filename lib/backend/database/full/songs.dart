@@ -13,6 +13,7 @@ CREATE TABLE songs (
   cover_art_uri TEXT,
   album_id INTEGER,
   artist_id INTEGER,
+  file_extension text NOT NULL,
   FOREIGN KEY (local_source_id) REFERENCES sources(id),
   FOREIGN KEY (remote_source_id) REFERENCES sources(id),
   FOREIGN KEY (album_id) REFERENCES albums(id),

@@ -2,7 +2,6 @@ import "package:flutter_test/flutter_test.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/errors/multi_project_error.dart";
 import "package:himig/backend/errors/project_error.dart";
-import "package:himig/locales/enums.dart";
 import "package:himig/utils/result.dart";
 
 void _expectSong(
@@ -53,6 +52,7 @@ void _testValidSong({
   String? albumName,
   String? artistName,
   required Duration duration,
+  required String fileExtension,
   required String reference,
   int? releaseYear,
 
@@ -73,6 +73,7 @@ void _testValidSong({
     albumName: albumName,
     artistName: artistName,
     duration: duration,
+    fileExtension: fileExtension,
     reference: reference,
     releaseYear: releaseYear,
     localSourceId: localSourceId,
@@ -116,6 +117,7 @@ void _testInvalidSourceSong({
   final result = Song.create(
     title: "some random title",
     duration: Duration(seconds: 123),
+    fileExtension: "mp3",
     reference: "some-reference",
     localSourceId: localSourceId,
     remoteSourceId: remoteSourceId,
@@ -135,6 +137,7 @@ void main() {
       _testValidSong(
         title: "some random title",
         duration: Duration(seconds: 123),
+        fileExtension: "mp3",
         reference: "some-id",
         sourceId: localSourceId,
         localSourceId: localSourceId,
@@ -149,6 +152,7 @@ void main() {
       _testValidSong(
         title: "some random title",
         duration: Duration(seconds: 123),
+        fileExtension: "mp3",
         reference: "some-id",
         sourceId: remoteSourceId,
         localSourceId: remoteSourceId,
@@ -165,6 +169,7 @@ void main() {
       _testValidSong(
         title: "some random title",
         duration: Duration(seconds: 123),
+        fileExtension: "mp3",
         reference: "some-id",
         sourceId: localSourceId,
         localSourceId: localSourceId,
@@ -184,6 +189,7 @@ void main() {
         albumName: "album",
         artistName: "artist",
         duration: Duration(seconds: 123),
+        fileExtension: "mp3",
         reference: "some-id",
         releaseYear: 2026,
         sourceId: localSourceId,
@@ -205,6 +211,7 @@ void main() {
         albumName: "album",
         artistName: "artist",
         duration: Duration(seconds: 123),
+        fileExtension: "mp3",
         reference: "some-id",
         releaseYear: 2026,
         sourceId: remoteSourceId,
@@ -228,6 +235,7 @@ void main() {
         albumName: "album",
         artistName: "artist",
         duration: Duration(seconds: 123),
+        fileExtension: "mp3",
         reference: "some-id",
         releaseYear: 2026,
         sourceId: localSourceId,

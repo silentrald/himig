@@ -9,7 +9,7 @@ import "package:himig/utils/result.dart";
 import "../mock/repos/album.dart";
 import "../mock/repos/artist.dart";
 import "../mock/repos/main.dart";
-import "../mock/service/source.dart";
+import "../mock/services/source.dart";
 
 void main() {
   group("[UseCase - Home V1]", () {
