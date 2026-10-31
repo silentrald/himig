@@ -7,6 +7,27 @@ import "package:sqflite_common_ffi/sqflite_ffi.dart";
 
 const minDatabaseVersion = 1;
 
+final upgradePath = {
+  1: [
+    """
+INSERT INTO songs(title, duration, reference) VALUES
+  ('title 1', 100, 'some-reference'),
+  ('delete this', 100, 'some-reference'),
+  ('title 2', 100, 'some-reference'),
+  ('title 3', 100, 'some-reference')
+"""
+        .trim(),
+    "DELETE FROM songs where title = 'delete this'",
+  ],
+  2: [
+    """
+INSERT INTO songs(title, duration, reference, file_extension)
+VALUES ('title 5', 100, 'some-reference', 'mp3')
+        """
+        .trim(),
+  ],
+};
+
 void main() {
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
@@ -36,6 +57,11 @@ void main() {
         );
         expect(await sqfliteDatabase.getVersion(), version);
         expect(sqfliteDatabase.isOpen, isTrue);
+
+        for (final query in upgradePath[version] ?? []) {
+          await sqfliteDatabase.execute(query);
+        }
+
         await sqfliteDatabase.close();
       } on Exception catch (error) {
         fail("Upgrade issue v${version - 1} -> v$version due to $error");
