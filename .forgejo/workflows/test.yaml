@@ -1,0 +1,35 @@
+name: Tests
+
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛒 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🔧 Install Flutter Dependencies
+        run: apt update && apt install jq -y
+
+      - name: ⚙ Setup Flutter SDK
+        uses: https://github.com/subosito/flutter-action@v2
+        with:
+          channel: master
+          flutter-version: 3.47.7
+          architecture: arm64
+          cache: true
+          pub-cache: true
+
+      - name: 🔧 Install Project Dependencies
+        run: flutter pub get -v
+        # timeout-minutes: 5
+
+      # TODO:
+      # - name: ✅ Dart Analyze
+      #   run: dart analyze
+
+      - name: 📋 Run Unit Tests
+        run: bash test.sh unit
+
+      - name: 📋 Run Integration Tests
+        run: bash test.sh integration
