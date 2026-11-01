@@ -36,7 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _showForm = false);
   }
 
-  Future<void> _deleteSource(Source source) async {
+  //Future<void> _deleteSource(Source source) async {
     // TODO:
     //final result = await _settingUseCase.deleteSource(source);
     //if (result is ResultError) {
@@ -46,7 +46,7 @@ class _SettingsPageState extends State<SettingsPage> {
     //
     //logger.info("Deleted source `${source.name}-${source.type.name}`");
     //setState(() => _showForm = false);
-  }
+  //}
 
   Future<void> _editSource(Source source) async {
     await _settingUseCase.editSource(source);

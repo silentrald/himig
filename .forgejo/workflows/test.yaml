@@ -22,11 +22,9 @@ jobs:
 
       - name: 🔧 Install Project Dependencies
         run: flutter pub get -v
-        # timeout-minutes: 5
 
-      # TODO:
-      # - name: ✅ Dart Analyze
-      #   run: dart analyze
+      - name: ✅ Dart Analyze
+        run: dart analyze
 
       - name: 📋 Run Unit Tests
         run: bash test.sh unit

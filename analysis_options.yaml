@@ -7,6 +7,9 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    # Removed background services, but keep the code for the future in case its needed
+    - lib/backend/services/background/**
+
 include: package:flutter_lints/flutter.yaml
 
 linter:

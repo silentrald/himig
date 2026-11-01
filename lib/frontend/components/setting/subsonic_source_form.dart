@@ -180,7 +180,6 @@ class _SubsonicSourceFormState extends State<SubsonicSourceForm> {
                   localSourceId: _localSourceId,
                 )
                 .value;
-            print("source data ${source.serialize()}");
             widget.onAccept!.call(source);
             setState(() => _password = ""); // Clear password afterwards
           },
