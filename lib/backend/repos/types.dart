@@ -18,6 +18,8 @@ abstract class RepoClient {
 
 abstract class RepoDatabase {
   RepoClient get client;
+  String get version;
+
   FutureResult<T> startTransaction<T>(
     FutureResult<T> Function(RepoClient) transaction,
   );

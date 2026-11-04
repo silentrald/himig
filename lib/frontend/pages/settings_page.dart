@@ -37,15 +37,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   //Future<void> _deleteSource(Source source) async {
-    // TODO:
-    //final result = await _settingUseCase.deleteSource(source);
-    //if (result is ResultError) {
-    //  logger.error("Could not delete source", error: result.error);
-    //  return;
-    //}
-    //
-    //logger.info("Deleted source `${source.name}-${source.type.name}`");
-    //setState(() => _showForm = false);
+  // TODO:
+  //final result = await _settingUseCase.deleteSource(source);
+  //if (result is ResultError) {
+  //  logger.error("Could not delete source", error: result.error);
+  //  return;
+  //}
+  //
+  //logger.info("Deleted source `${source.name}-${source.type.name}`");
+  //setState(() => _showForm = false);
   //}
 
   Future<void> _editSource(Source source) async {

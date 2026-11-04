@@ -99,13 +99,17 @@ class SqfliteRepoClient extends RepoClient {
 class SqfliteRepoDatabase extends RepoDatabase {
   final Database _database;
   final SqfliteRepoClient _client;
+  final String _version;
 
-  SqfliteRepoDatabase({required Database database})
+  SqfliteRepoDatabase({required Database database, required this._version})
     : _database = database,
       _client = SqfliteRepoClient(client: database, transaction: false);
 
   @override
   RepoClient get client => _client;
+
+  @override
+  String get version => _version;
 
   @override
   FutureResult<T> startTransaction<T>(

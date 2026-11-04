@@ -4,6 +4,7 @@ import "package:flutter/foundation.dart";
 import "package:intl/intl.dart";
 
 enum Level {
+  silent(0),
   fatal(1),
   error(2),
   warn(3),

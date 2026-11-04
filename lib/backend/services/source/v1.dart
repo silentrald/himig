@@ -1,6 +1,5 @@
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/entities/source.dart";
-import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/services/source/types.dart";
 import "package:himig/utils/result.dart";
 
@@ -26,8 +25,8 @@ class MainSourceService extends SourceService {
   }
 
   @override
-  FutureResult<int> scanSource(Source source, RepoClient client) {
-    return _getImplementation(source).scanSource(source, client);
+  FutureResult<int> scanSource(Source source) {
+    return _getImplementation(source).scanSource(source);
   }
 
   @override

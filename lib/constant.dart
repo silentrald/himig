@@ -5,7 +5,7 @@ String packageName = "unknown";
 String version = "unknown";
 String buildNumber = "unknown";
 
-const int databaseVersion = 2;
+const int databaseVersion = 3;
 
 // in ms
 const int scanningInterval = 3000;

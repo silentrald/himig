@@ -21,6 +21,7 @@ generic:
   scan: Scan
   settings: Settings
   singles: Singles
+  song: Song
   tracks: Tracks
   unknown: Unknown
   update: Update

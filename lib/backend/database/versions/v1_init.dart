@@ -1,10 +1,11 @@
 // ignore_for_file: file_names
 
 import "package:himig/backend/database/version.dart";
+import "package:himig/utils/versions.dart";
 
 class V1InitDatabaseVersion extends DatabaseVersion {
   @override
-  List<String> getUpgradeChanges() {
+  List<String> getUpgradeChanges(Version _sqliteVersion) {
     return [
       """
 CREATE TABLE sources (
@@ -66,13 +67,12 @@ CREATE TABLE songs (
   }
 
   @override
-  List<String> getDowngradeChanges() {
+  List<String> getDowngradeChanges(Version _sqliteVersion) {
     return [
       "DROP TABLE songs",
       "DROP TABLE albums",
       "DROP TABLE artists",
       "DROP TABLE sources",
-      "PRAGMA foreign_keys = OFF",
     ];
   }
 }

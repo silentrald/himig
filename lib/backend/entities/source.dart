@@ -134,6 +134,12 @@ class FolderSource extends Source {
 
 /// API Implementations
 
+enum SubsonicFormat {
+  xml,
+  json,
+  //jsonp,
+}
+
 /// Songs can be queried from any subsonic api server.
 class SubsonicSource extends Source {
   int _id;
@@ -316,15 +322,19 @@ class SubsonicSource extends Source {
     );
   }
 
-  Uri getUri(String path, [Map<String, String> parameters = const {}]) =>
-      (_https ? Uri.https : Uri.http)(_host, path, {
-        ...parameters,
-        "u": _username,
-        "t": _hashedPassword,
-        "s": _salt,
-        "v": constant.version,
-        "c": constant.appName,
-      });
+  Uri getUri(
+    String path, [
+    Map<String, String> parameters = const {},
+    SubsonicFormat format = .json,
+  ]) => (_https ? Uri.https : Uri.http)(_host, path, {
+    ...parameters,
+    "f": format.name,
+    "u": _username,
+    "t": _hashedPassword,
+    "s": _salt,
+    "v": constant.version,
+    "c": constant.appName,
+  });
 
   // Getters / Setters
   @override

@@ -13,10 +13,6 @@ class Song {
   final Duration duration;
   final String fileExtension;
 
-  /// For remote source - id
-  /// For local source - path
-  final String reference;
-
   final int? releaseYear;
 
   /// Reference to [Source]
@@ -41,7 +37,6 @@ class Song {
     this.artistName,
     required this.duration,
     required this.fileExtension,
-    required this.reference,
 
     this.releaseYear,
     this._localSourceId,
@@ -111,7 +106,6 @@ class Song {
         artistName: artistName,
         duration: duration,
         fileExtension: fileExtension,
-        reference: reference,
         releaseYear: releaseYear,
         localSourceId: localSourceId,
         localUri: localUri,
@@ -185,7 +179,6 @@ class Song {
         artistName: artistName ?? this.artistName,
         duration: duration ?? this.duration,
         fileExtension: fileExtension ?? this.fileExtension,
-        reference: reference ?? this.reference,
         releaseYear: releaseYear ?? this.releaseYear,
         localSourceId: localSourceId,
         localUri: localUri,
@@ -227,7 +220,6 @@ class Song {
     "albumName": albumName,
     "artistName": artistName,
     "duration": duration.inMilliseconds,
-    "reference": reference,
     "releaseYear": releaseYear,
     "localSourceId": _localSourceId,
     "localUri": _localUri,

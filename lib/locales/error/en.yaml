@@ -1,4 +1,5 @@
 entityAlbum:
+  pair: "{source} pair is invalid for album."
   sources: "No sources (local/remote) found in creating an album."
 
 entitySong:
@@ -13,6 +14,12 @@ entitySource:
   subsonicPasswordRequired: "Password is required"
   subsonicAddressRequired: "Address is required"
   subsonicAddressProtocol: "Address should start with 'http' or 'https'"
+
+repo:
+  notFound: "{record} record with id {id} was not found."
+  noneInserted: "{record} record was not inserted."
+  noneUpdated: "{record} record with id {id} was not updated."
+  noneDelete: "{record} record with id {id} was not deleted."
 
 serviceSource:
   noLocalSource: No local source for {name}.

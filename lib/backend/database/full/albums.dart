@@ -6,9 +6,10 @@ CREATE TABLE albums (
   local_source_id INTEGER,
   remote_source_id INTEGER,
   artist_id INTEGER,
-  reference TEXT,
   release_year INT,
   cover_art_uri TEXT,
+  local_path TEXT,
+  remote_id TEXT,
   FOREIGN KEY (local_source_id) REFERENCES sources(id),
   FOREIGN KEY (remote_source_id) REFERENCES sources(id),
   FOREIGN KEY (artist_id) REFERENCES artists(id)

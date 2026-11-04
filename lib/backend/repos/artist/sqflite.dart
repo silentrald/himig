@@ -1,4 +1,5 @@
 import "package:himig/backend/entities/artist.dart";
+import "package:himig/backend/errors/project_error.dart";
 import "package:himig/backend/repos/artist/types.dart";
 import "package:himig/backend/repos/sqflite.dart";
 import "package:himig/backend/repos/types.dart";
@@ -14,6 +15,27 @@ class SqfliteArtistRepo extends ArtistRepo {
       name: row["name"],
       imageUri: imageUri == null ? null : Uri.parse(imageUri),
     );
+  }
+
+  @override
+  FutureResult<Artist> getArtist(RepoClient client, int artistId) async {
+    final result = await client.select("SELECT * FROM artists WHERE id = ?", [
+      artistId,
+    ]);
+    if (result is ResultError) {
+      return result.toError();
+    }
+
+    if (result.value.isEmpty) {
+      return Result.error(
+        ProjectError(.repo, "notFound", {
+          "record": (.generic, "album"),
+          "id": (null, artistId.toString()),
+        }),
+      );
+    }
+
+    return Result.ok(_rowToArtist(result.value[0]));
   }
 
   @override
@@ -35,14 +57,22 @@ class SqfliteArtistRepo extends ArtistRepo {
   }
 
   @override
-  FutureResult<Map<String, int>> getArtistMap(RepoClient client) async {
-    final result = await client.select("SELECT * FROM artists");
-
+  FutureResult<Artist?> findArtistByName(
+    RepoClient client,
+    String artistName,
+  ) async {
+    final result = await client.select("SELECT * FROM artists WHERE name = ?", [
+      artistName,
+    ]);
     if (result is ResultError) {
       return result.toError();
     }
 
-    return Result.ok({for (final row in result.value) row["name"]: row["id"]});
+    if (result.value.isEmpty) {
+      return Result.ok(null);
+    }
+
+    return Result.ok(_rowToArtist(result.value[0]));
   }
 
   @override

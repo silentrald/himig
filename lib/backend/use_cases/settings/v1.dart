@@ -57,7 +57,7 @@ class SettingsUseCaseV1 extends SettingsUseCase {
   }
 
   @override
-  Future<Result<void>> editSource(Source source) async {
+  FutureResult<void> editSource(Source source) async {
     final validateResult = _validateSource(source);
     if (validateResult is ResultError) {
       return validateResult;
@@ -75,11 +75,11 @@ class SettingsUseCaseV1 extends SettingsUseCase {
   }
 
   @override
-  Future<Result<int>> scanSources() async {
-    return await _database.startTransaction((client) async {
-      final artistResult = await _artistRepo.deleteAllArtists(client);
-      if (artistResult is ResultError) {
-        return artistResult.toError();
+  FutureResult<int> scanSources() async {
+    final deleteResult = await _database.startTransaction((client) async {
+      final songResult = await _songRepo.deleteAllSongs(client);
+      if (songResult is ResultError) {
+        return songResult.toError();
       }
 
       final albumResult = await _albumRepo.deleteAllAlbums(client);
@@ -87,25 +87,37 @@ class SettingsUseCaseV1 extends SettingsUseCase {
         return albumResult.toError();
       }
 
-      final songResult = await _songRepo.deleteAllSongs(client);
-      if (songResult is ResultError) {
-        return songResult.toError();
+      final artistResult = await _artistRepo.deleteAllArtists(client);
+      if (artistResult is ResultError) {
+        return artistResult.toError();
       }
 
-      int count = 0;
-      for (final source in AppState().sourceList) {
-        final result = await _sourceService.scanSource(source, client);
-        switch (result) {
-          case ResultOk(:var value):
-            count += value;
-          case ResultError(:var error):
-            logger.warn(
-              "Could not scan source ${source.id}:${source.name}, Reason ${error.toString()}",
-            );
-        }
-      }
-
-      return Result.ok(count);
+      return Result.ok(null);
     });
+
+    if (deleteResult is ResultError) {
+      return deleteResult.toError();
+    }
+
+    int count = 0;
+    for (final source in AppState().sourceList) {
+      final result = await _sourceService.scanSource(source);
+      switch (result) {
+        case ResultOk(:var value):
+          count += value;
+        case ResultError(:var error):
+          logger.warn(
+            "Could not scan source ${source.id}:${source.name}, Reason ${error.toString()}",
+          );
+      }
+    }
+
+    return Result.ok(count);
+  }
+
+  // TODO: Change key to an enum
+  @override
+  FutureResult<Map<String, String>> getVersions() async {
+    return Result.ok({"sqlite": _database.version});
   }
 }

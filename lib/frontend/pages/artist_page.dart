@@ -136,8 +136,7 @@ class _ArtistPageState extends State<ArtistPage> {
 
   Widget _buildTrack(AppLocalizations locale, AlbumSongsDto albumSongs) {
     final album =
-        albumSongs.album ??
-        Album(name: locale.translate(.generic, "singles"), reference: "");
+        albumSongs.album ?? Album(name: locale.translate(.generic, "singles"));
     final songs = albumSongs.songs;
 
     return LayoutBuilder(
@@ -203,8 +202,7 @@ class _ArtistPageState extends State<ArtistPage> {
     final imageWidth = (width - (count + 1) * _paddingSize) / count;
     final albums = _albumSongs.map((as) {
       final album =
-          as.album ??
-          Album(name: locale.translate(.generic, "singles"), reference: "");
+          as.album ?? Album(name: locale.translate(.generic, "singles"));
       return AlbumCard(
         album,
         imageSize: imageWidth,

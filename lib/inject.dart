@@ -54,7 +54,16 @@ Future<void> setup() async {
     onUpgrade: onUpgradeDatabase,
     onDowngrade: onDowngradeDatabase,
   );
-  final database = SqfliteRepoDatabase(database: sqfliteDatabase);
+  final versionQuery = await sqfliteDatabase.rawQuery(
+    "SELECT sqlite_version() AS version",
+  );
+  final sqliteVersion = versionQuery[0]["version"]!.toString();
+  logger.info("Detected Sqlite v$sqliteVersion");
+
+  final repoDatabase = SqfliteRepoDatabase(
+    database: sqfliteDatabase,
+    version: sqliteVersion,
+  );
 
   final albumRepo = SqfliteAlbumRepo();
   final artistRepo = SqfliteArtistRepo();
@@ -65,12 +74,14 @@ Future<void> setup() async {
   final metadataService = AudioMetadataReaderMetadataService();
 
   final folderSourceImpl = FolderSourceImplementation(
+    repoDatabase: repoDatabase,
     albumRepo: albumRepo,
     artistRepo: artistRepo,
     songRepo: songRepo,
     metadataService: metadataService,
   );
   final subsonicSourceImpl = SubsonicSourceImplementation(
+    repoDatabase: repoDatabase,
     albumRepo: albumRepo,
     artistRepo: artistRepo,
     songRepo: songRepo,
@@ -98,7 +109,7 @@ Future<void> setup() async {
   // Helpers
   final cacheHelper = CacheHelperV1(
     appState: AppState(),
-    database: database,
+    database: repoDatabase,
     songRepo: songRepo,
     fetchService: fetchService,
     sourceService: sourceService,
@@ -107,7 +118,7 @@ Future<void> setup() async {
   // UseCases
   getIt.registerLazySingleton<HomeUseCase>(
     () => HomeUseCaseV1(
-      database: database,
+      database: repoDatabase,
       albumRepo: albumRepo,
       artistRepo: artistRepo,
       appState: AppState(),
@@ -116,21 +127,21 @@ Future<void> setup() async {
   );
   getIt.registerLazySingleton<AlbumUseCase>(
     () => AlbumUseCaseV1(
-      database: database,
+      database: repoDatabase,
       songRepo: songRepo,
       cacheHelper: cacheHelper,
     ),
   );
   getIt.registerLazySingleton<ArtistUseCase>(
     () => ArtistUseCaseV1(
-      database: database,
+      database: repoDatabase,
       albumRepo: albumRepo,
       songRepo: songRepo,
       cacheHelper: cacheHelper,
     ),
   );
   final settingsUseCase = SettingsUseCaseV1(
-    database: database,
+    database: repoDatabase,
     sourceRepo: sourceRepo,
     albumRepo: albumRepo,
     artistRepo: artistRepo,
@@ -142,7 +153,7 @@ Future<void> setup() async {
   await getIt.allReady();
 
   // Initialization
-  final result = await sourceRepo.getAllSources(database.client);
+  final result = await sourceRepo.getAllSources(repoDatabase.client);
   switch (result) {
     case ResultError(:var error):
       logger.error("Could not load sources", error: error);

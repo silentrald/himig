@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:himig/backend/dtos/audio_metadata.dart";
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/entities/song.dart";
@@ -9,6 +10,7 @@ import "package:himig/backend/repos/artist/types.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/services/metadata/types.dart";
+import "package:himig/backend/services/source/shared_v1.dart";
 import "package:himig/backend/services/source/types.dart";
 import "package:himig/locales/app_localizations.dart";
 import "package:himig/utils/logger.dart" as logger;
@@ -16,15 +18,16 @@ import "package:himig/utils/result.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart" as path_provider;
 
-// TODO: Collission checking
-// Batch loading logs
+// TODO: Future implementation, use Isolates/multithreading
 class FolderSourceImplementation extends SourceImplementation<FolderSource> {
+  final RepoDatabase _repoDatabase;
   final AlbumRepo _albumRepo;
   final ArtistRepo _artistRepo;
   final SongRepo _songRepo;
   final MetadataService _metadataService;
 
   FolderSourceImplementation({
+    required this._repoDatabase,
     required this._albumRepo,
     required this._artistRepo,
     required this._songRepo,
@@ -40,7 +43,9 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
   }
 
   @override
-  Future<Result<int>> scanSource(FolderSource source, RepoClient client) async {
+  FutureResult<int> scanSource(FolderSource source) async {
+    logger.info("Scanning with folder (${source.name})");
+
     try {
       final directory = Directory(source.path);
       final entities = await _listSafe(directory);
@@ -50,15 +55,12 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
 
       final temporaryDirectory = await path_provider.getTemporaryDirectory();
 
-      final mapResult = await _artistRepo.getArtistMap(client);
-      if (mapResult is ResultError) {
-        return mapResult.toError();
+      final countResult = await _albumRepo.countAlbums(_repoDatabase.client);
+      if (countResult is ResultError) {
+        return countResult.toError();
       }
 
       // Key - artist:album
-      final Map<String, int> albumMap = {};
-      final Map<String, int> artistMap = mapResult.value;
-      int? albumId;
       int? artistId;
 
       // Scans the first song in the album, and uses that for all songs.
@@ -69,103 +71,222 @@ class FolderSourceImplementation extends SourceImplementation<FolderSource> {
           continue;
         }
 
-        final result = await _metadataService.getAudioMetadata(file);
-        if (result is ResultError) {
-          logger.error("Could not parse metadata", error: result.error);
+        final metadataResult = await _metadataService.getAudioMetadata(file);
+        if (metadataResult is ResultError) {
+          logger.error("Could not parse metadata", error: metadataResult.error);
           continue;
         }
 
-        final metadata = result.value;
+        final metadata = metadataResult.value;
         final artistName =
             metadata.artist ??
             AppLocalizations.instance.translate(.generic, "unknown");
         final albumName =
             metadata.album ??
             AppLocalizations.instance.translate(.generic, "unknown");
-        final key = "$artistName-$albumName";
+        final songTitle =
+            metadata.title ?? path.basenameWithoutExtension(file.path);
+        final localUri = Uri.file(file.path);
 
-        artistId = artistMap[artistName];
-        if (artistId == null) {
-          final artistResult = await _artistRepo.insertArtist(
+        final result = await _repoDatabase.startTransaction((client) async {
+          final artistResult = await _getOrInsertArtist(
             client,
-            Artist(
-              name: artistName,
-              //imageUri: None,
-            ),
+            source,
+            artistName: artistName,
+            albumName: albumName,
           );
           if (artistResult is ResultError) {
-            // TODO: if album fails to be inserted, create a fail queue
-            logger.warn("Skipping $albumName. Reason ${artistResult.error}");
-            continue;
+            return artistResult.toError();
           }
 
-          artistId = artistResult.value.id;
-          artistMap[artistName] = artistId;
-        }
-
-        albumId = albumMap[key];
-        if (albumId == null) {
-          coverArtUri = null;
-
-          // TODO: Check if any image exists in the folder as a backup as well
-          if (metadata.image != null) {
-            final imagePath = "${temporaryDirectory.path}/$key";
-            final imageFile = File("${temporaryDirectory.path}/$key");
-            final exists = await imageFile.exists();
-            if (!exists) {
-              await imageFile.writeAsBytes(metadata.image!);
-            }
-            coverArtUri = Uri.file(imagePath);
-          }
-
-          final albumIdResult = await _albumRepo.insertAlbum(
+          final albumResult = await _upsertAlbum(
             client,
-            Album(
-              name: albumName,
-              artistId: artistId,
-              localSourceId: source.id,
-              reference: file.parent.path,
-              releaseYear: metadata.releaseYear,
-              coverArtUri: coverArtUri,
-            ),
+            source,
+            artistId: artistResult.value,
+            artistName: artistName,
+            albumName: albumName,
+            metadata: metadata,
+            parentFolder: file.parent.path,
+            temporaryPath: temporaryDirectory.path,
           );
+          if (albumResult is ResultError) {
+            return albumResult.toError();
+          }
+          int albumId = albumResult.value.id;
 
-          if (albumIdResult is ResultError) {
-            logger.warn("Skipping $albumName. Reason ${albumIdResult.error}");
-            continue;
+          final songResult = await _songRepo.findSongByNames(
+            client,
+            songTitle,
+            albumName,
+            artistName,
+          );
+          if (songResult is ResultError) {
+            return songResult.toError();
           }
 
-          albumId = albumIdResult.value.id;
-          albumMap[key] = albumId;
-        }
-
-        final title =
-            metadata.title ?? path.basenameWithoutExtension(file.path);
-        final songResult = Song.create(
-          title: title,
-          duration: metadata.duration ?? Duration.zero,
-          fileExtension: path.extension(file.path),
-          reference: file.path,
-          releaseYear: metadata.releaseYear,
-          localSourceId: source.id,
-          localUri: Uri.file(file.path),
-          coverArtUri: coverArtUri,
-          albumId: albumId,
-          artistId: artistId,
-        );
-        switch (songResult) {
-          case ResultError(:var error):
-            logger.warn(
-              "Skipping $title of $albumName. Reason ${error.toString()}",
+          if (songResult.value != null) {
+            final updated = await updateExistingSongLocal(
+              client,
+              _songRepo,
+              songResult.value!,
+              source.id,
+              localUri,
             );
-          case ResultOk(:var value):
-            _songRepo.insertSong(client, value);
+            if (updated) {
+              return Result.ok(null);
+            }
+            // If the song was not updated, create a new one instead
+          }
+
+          final createResult = Song.create(
+            title: songTitle,
+            duration: metadata.duration ?? Duration.zero,
+            fileExtension: path.extension(file.path),
+            reference: file.path,
+            releaseYear: metadata.releaseYear,
+            localSourceId: source.id,
+            localUri: localUri,
+            coverArtUri: coverArtUri,
+            albumId: albumId,
+            artistId: artistId,
+          );
+          if (createResult is ResultError) {
+            return createResult.toError();
+          }
+
+          final newSong = createResult.value;
+          return await _songRepo.insertSong(client, newSong);
+        });
+
+        if (result is ResultError) {
+          logger.warn(
+            "Could not insert '$songTitle' by '$artistName' from album '$albumName'",
+            error: result.error,
+          );
+        } else {
+          logger.info(
+            "Inserted '$songTitle' by '$artistName' from album '$albumName'",
+          );
         }
       }
-      return Result.ok(albumMap.length);
+
+      final finalCountResult = await _albumRepo.countAlbums(
+        _repoDatabase.client,
+      );
+      if (finalCountResult is ResultError) {
+        logger.warn(
+          "Could not get the final count for albums",
+          error: finalCountResult.error,
+        );
+        return Result.ok(0);
+      }
+
+      return Result.ok(finalCountResult.value - countResult.value);
     } on Exception catch (error) {
       return Result.error(error);
     }
+  }
+
+  FutureResult<int> _getOrInsertArtist(
+    RepoClient client,
+    FolderSource source, {
+    required String artistName,
+    required String albumName,
+  }) async {
+    final findResult = await _artistRepo.findArtistByName(client, artistName);
+    if (findResult is ResultError) {
+      return findResult.toError();
+    }
+
+    if (findResult.value != null) {
+      return Result.ok(findResult.value!.id);
+    }
+
+    final insertResult = await _artistRepo.insertArtist(
+      client,
+      Artist(
+        name: artistName,
+        // TODO: Might need to get this from MusicBrainz and get it from their socials
+        //imageUri: None,
+      ),
+    );
+    if (insertResult is ResultError) {
+      return insertResult.toError();
+    }
+
+    return Result.ok(insertResult.value.id);
+  }
+
+  FutureResult<Album> _upsertAlbum(
+    RepoClient client,
+    FolderSource source, {
+    required int artistId,
+    required String artistName,
+    required String albumName,
+    required AudioMetadataDto metadata,
+    required String parentFolder,
+    required String temporaryPath,
+  }) async {
+    final findResult = await _albumRepo.findAlbumByNames(
+      client,
+      albumName,
+      artistName,
+    );
+    if (findResult is ResultError) {
+      return findResult.toError();
+    }
+
+    if (findResult.value == null) {
+      Uri? coverArtUri;
+
+      // TODO: Check if any image exists in the folder as a backup as well
+      if (metadata.image != null) {
+        final key = "$artistName-$albumName";
+        final imagePath = "$temporaryPath/$key";
+        final imageFile = File("$temporaryPath/$key");
+        final exists = await imageFile.exists();
+        if (!exists) {
+          await imageFile.writeAsBytes(metadata.image!);
+        }
+        coverArtUri = Uri.file(imagePath);
+      }
+
+      final insertResult = await _albumRepo.insertAlbum(
+        client,
+        Album(
+          name: albumName,
+          artistId: artistId,
+          localSourceId: source.id,
+          localPath: parentFolder,
+          releaseYear: metadata.releaseYear,
+          coverArtUri: coverArtUri,
+        ),
+      );
+
+      if (insertResult is ResultError) {
+        return insertResult.toError();
+      }
+
+      return Result.ok(insertResult.value);
+    }
+
+    final existingAlbum = findResult.value!;
+    if (existingAlbum.localPath != null) {
+      if (existingAlbum.localPath == parentFolder) {
+        return Result.ok(existingAlbum);
+      }
+
+      return Result.error(
+        Exception("Album $albumName already has a local path"),
+      );
+    }
+
+    final error = existingAlbum.setLocal(source.id, parentFolder);
+    if (error != null) {
+      return Result.error(error);
+    }
+
+    return await _albumRepo.updateAlbum(client, existingAlbum);
   }
 
   @override

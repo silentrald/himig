@@ -1,4 +1,5 @@
 import "package:himig/backend/entities/song.dart";
+import "package:himig/backend/errors/project_error.dart";
 import "package:himig/backend/repos/sqflite.dart";
 import "package:himig/backend/repos/types.dart";
 import "package:himig/backend/repos/song/types.dart";
@@ -6,6 +7,14 @@ import "package:himig/utils/result.dart";
 
 class SqfliteSongRepo extends SongRepo {
   static const _tableName = "songs";
+  static const _selectPrefix = """
+SELECT *,
+  s.id as id,
+  al.name as album_name,
+  ar.name as artist_name
+FROM songs s
+  LEFT JOIN albums al ON al.id = s.album_id
+  LEFT JOIN artists ar ON ar.id = s.artist_id""";
 
   Song _rowToSong(Map row) {
     final localUri = row["local_uri"];
@@ -18,13 +27,12 @@ class SqfliteSongRepo extends SongRepo {
       artistName: row["artist_name"],
       duration: Duration(milliseconds: row["duration"]),
       fileExtension: row["file_extension"],
-      reference: row["reference"],
       releaseYear: row["release_year"],
       localSourceId: row["local_source_id"],
       localUri: localUri == null ? null : Uri.parse(localUri),
       remoteSourceId: row["remote_source_id"],
       remoteUri: remoteUri == null ? null : Uri.parse(remoteUri),
-      coverArtUri: remoteUri == null ? null : Uri.parse(coverArtUri),
+      coverArtUri: coverArtUri == null ? null : Uri.parse(coverArtUri),
       albumId: row["album_id"],
       artistId: row["artist_id"],
     );
@@ -44,6 +52,33 @@ class SqfliteSongRepo extends SongRepo {
   }
 
   @override
+  FutureResult<Song> getSong(RepoClient client, int songId) async {
+    final result = await _getSongListHelper(
+      client,
+      """
+$_selectPrefix
+WHERE s.id = ?
+      """
+          .trim(),
+      [songId],
+    );
+    if (result is ResultError) {
+      return result.toError();
+    }
+
+    if (result.value.isEmpty) {
+      return Result.error(
+        ProjectError(.repo, "notFound", {
+          "record": (.generic, "song"),
+          "id": (null, songId.toString()),
+        }),
+      );
+    }
+
+    return Result.ok(result.value[0]);
+  }
+
+  @override
   FutureResult<List<Song>> getSongList(
     RepoClient client, {
     int page = 1,
@@ -51,13 +86,7 @@ class SqfliteSongRepo extends SongRepo {
   }) => _getSongListHelper(
     client,
     """
-SELECT *,
-  s.id as id,
-  al.name as album_name,
-  ar.name as artist_name
-FROM songs s
-  LEFT JOIN albums al ON al.id = s.album_id
-  LEFT JOIN artists ar ON ar.id = s.artist_id
+$_selectPrefix
 ORDER BY s.name
 LIMIT ?, ?
 """
@@ -70,13 +99,7 @@ LIMIT ?, ?
       _getSongListHelper(
         client,
         """
-SELECT *,
-  s.id as id,
-  al.name as album_name,
-  ar.name as artist_name
-FROM songs s
-  LEFT JOIN albums al ON al.id = s.album_id
-  LEFT JOIN artists ar ON ar.id = s.artist_id
+$_selectPrefix
 WHERE s.album_id = ?
       """
             .trim(),
@@ -90,13 +113,7 @@ WHERE s.album_id = ?
   ) => _getSongListHelper(
     client,
     """
-SELECT *,
-  s.id as id,
-  al.name as album_name,
-  ar.name as artist_name
-FROM songs s
-  LEFT JOIN albums al ON al.id = s.album_id
-  LEFT JOIN artists ar ON ar.id = s.artist_id
+$_selectPrefix
 WHERE s.artist_id = ?
     """
         .trim(),
@@ -104,12 +121,40 @@ WHERE s.artist_id = ?
   );
 
   @override
+  FutureResult<Song?> findSongByNames(
+    RepoClient client,
+    String songTitle,
+    String albumName,
+    String? artistName,
+  ) async {
+    final result = await _getSongListHelper(
+      client,
+      """
+$_selectPrefix
+WHERE s.title = ?
+  AND al.name = ?
+  AND ar.name = ?
+"""
+          .trim(),
+      [songTitle, albumName, artistName],
+    );
+    if (result is ResultError) {
+      return result.toError();
+    }
+
+    if (result.value.isEmpty) {
+      return Result.ok(null);
+    }
+
+    return Result.ok(result.value[0]);
+  }
+
+  @override
   FutureResult<Song> insertSong(RepoClient client, Song song) async {
     final result = await client.insert(_tableName, {
       "title": song.title,
       "duration": song.duration.inMilliseconds,
       "file_extension": song.fileExtension,
-      "reference": song.reference,
       "release_year": song.releaseYear,
       "local_source_id": song.localSourceId,
       "local_uri": song.localUri?.toString(),
@@ -120,18 +165,18 @@ WHERE s.artist_id = ?
       "artist_id": song.artistId,
     });
 
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
-
-      case ResultOk(:var value):
-        if (value == 0) {
-          return Result.error(Exception("Song was not inserted"));
-        }
-        song.id = value;
+    if (result is ResultError) {
+      return result.toError();
     }
 
-    return Result.ok(song);
+    final id = result.value;
+    if (result.value == 0) {
+      return Result.error(
+        ProjectError(.repo, "noneInserted", {"record": (.generic, "song")}),
+      );
+    }
+
+    return Result.ok(song.copyWith(id: id).value);
   }
 
   @override
@@ -142,7 +187,6 @@ WHERE s.artist_id = ?
         "title": song.title,
         "duration": song.duration.inMilliseconds,
         "file_extension": song.fileExtension,
-        "reference": song.reference,
         "release_year": song.releaseYear,
         "local_source_id": song.localSourceId,
         "local_uri": song.localUri?.toString(),
@@ -155,14 +199,17 @@ WHERE s.artist_id = ?
       {"id": song.id},
     );
 
-    switch (result) {
-      case ResultError(:var error):
-        return Result.error(error);
+    if (result is ResultError) {
+      return result.toError();
+    }
 
-      case ResultOk(:var value):
-        if (value == 0) {
-          return Result.error(Exception("Song was not updated"));
-        }
+    if (result.value == 0) {
+      return Result.error(
+        ProjectError(.repo, "noneUpdated", {
+          "record": (.generic, "song"),
+          "id": (null, song.id.toString()),
+        }),
+      );
     }
 
     return Result.ok(song);
