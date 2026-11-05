@@ -1,5 +1,6 @@
 import "dart:math";
 
+import "package:collection/collection.dart";
 import "package:himig/backend/entities/artist.dart";
 import "package:himig/backend/repos/artist/types.dart";
 import "package:himig/backend/repos/types.dart";
@@ -14,6 +15,10 @@ class MockArtistRepo extends ArtistRepo {
   }
 
   @override
+  FutureResult<Artist> getArtist(RepoClient client, int artistId) async =>
+      Result.ok(_artists.firstWhere((a) => a.id == artistId));
+
+  @override
   FutureResult<List<Artist>> getArtistList(
     RepoClient client, {
     int page = 1,
@@ -23,9 +28,10 @@ class MockArtistRepo extends ArtistRepo {
   );
 
   @override
-  FutureResult<Map<String, int>> getArtistMap(RepoClient client) async {
-    return Result.ok({for (var artist in _artists) artist.name: artist.id});
-  }
+  FutureResult<Artist?> findArtistByName(
+    RepoClient client,
+    String artistName,
+  ) async => Result.ok(_artists.firstWhereOrNull((a) => a.name == artistName));
 
   @override
   FutureResult<Artist> insertArtist(RepoClient client, Artist artist) async {

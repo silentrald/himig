@@ -31,7 +31,6 @@ void _expectSong(
   expect(song.albumName, albumName);
   expect(song.artistName, artistName);
   expect(song.duration, duration);
-  expect(song.reference, reference);
   expect(song.releaseYear, releaseYear);
 
   expect(song.sourceId, sourceId);
@@ -250,51 +249,53 @@ void main() {
       );
     });
 
-    test(
-      "Missing localUri for local song",
-      () => _testInvalidSourceSong(
-        localSourceId: 1,
-        errors: [
-          ProjectError(.entitySong, "pair", {"source": (.generic, "local")}),
-          ProjectError(.entitySong, "sources"),
-        ],
-      ),
-    );
-    test(
-      "Missing localSourceId for local song",
-      () => _testInvalidSourceSong(
-        localUri: Uri.parse("file://some/local/song.mp3"),
-        errors: [
-          ProjectError(.entitySong, "pair", {"source": (.generic, "local")}),
-          ProjectError(.entitySong, "sources"),
-        ],
-      ),
-    );
-    test(
-      "Missing remoteUri for remote song",
-      () => _testInvalidSourceSong(
-        remoteSourceId: 1,
-        errors: [
-          ProjectError(.entitySong, "pair", {"source": (.generic, "remote")}),
-          ProjectError(.entitySong, "sources"),
-        ],
-      ),
-    );
-    test(
-      "Missing remoteSourceId for remote song",
-      () => _testInvalidSourceSong(
-        remoteUri: Uri.parse("https://random-song.com"),
-        errors: [
-          ProjectError(.entitySong, "pair", {"source": (.generic, "remote")}),
-          ProjectError(.entitySong, "sources"),
-        ],
-      ),
-    );
-    test(
-      "Missing source and uri for song",
-      () => _testInvalidSourceSong(
-        errors: [ProjectError(.entitySong, "sources")],
-      ),
-    );
+    group("Errors", () {
+      test(
+        "Missing localUri for local song",
+        () => _testInvalidSourceSong(
+          localSourceId: 1,
+          errors: [
+            ProjectError(.entitySong, "pair", {"source": (.generic, "local")}),
+            ProjectError(.entitySong, "sources"),
+          ],
+        ),
+      );
+      test(
+        "Missing localSourceId for local song",
+        () => _testInvalidSourceSong(
+          localUri: Uri.parse("file://some/local/song.mp3"),
+          errors: [
+            ProjectError(.entitySong, "pair", {"source": (.generic, "local")}),
+            ProjectError(.entitySong, "sources"),
+          ],
+        ),
+      );
+      test(
+        "Missing remoteUri for remote song",
+        () => _testInvalidSourceSong(
+          remoteSourceId: 1,
+          errors: [
+            ProjectError(.entitySong, "pair", {"source": (.generic, "remote")}),
+            ProjectError(.entitySong, "sources"),
+          ],
+        ),
+      );
+      test(
+        "Missing remoteSourceId for remote song",
+        () => _testInvalidSourceSong(
+          remoteUri: Uri.parse("https://random-song.com"),
+          errors: [
+            ProjectError(.entitySong, "pair", {"source": (.generic, "remote")}),
+            ProjectError(.entitySong, "sources"),
+          ],
+        ),
+      );
+      test(
+        "Missing source and uri for song",
+        () => _testInvalidSourceSong(
+          errors: [ProjectError(.entitySong, "sources")],
+        ),
+      );
+    });
   });
 }

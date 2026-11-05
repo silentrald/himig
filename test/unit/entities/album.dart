@@ -1,6 +1,6 @@
 import "package:himig/backend/entities/album.dart";
 import "package:himig/backend/errors/multi_project_error.dart";
-import "package:himig/locales/enums.dart";
+import "package:himig/backend/errors/project_error.dart";
 import "package:himig/utils/result.dart";
 import "package:test/test.dart";
 
@@ -13,9 +13,10 @@ void _expectAlbum(
   required int sourceId,
   int? localSourceId,
   int? remoteSourceId,
-  required String reference,
   int? releaseYear,
   Uri? coverArtUri,
+  String? localPath,
+  String? remoteId,
 }) {
   expect(album.id, id);
   expect(album.name, name);
@@ -24,9 +25,10 @@ void _expectAlbum(
   expect(album.sourceId, sourceId);
   expect(album.localSourceId, localSourceId);
   expect(album.remoteSourceId, remoteSourceId);
-  expect(album.reference, reference);
   expect(album.releaseYear, releaseYear);
   expect(album.coverArtUri, coverArtUri);
+  expect(album.localPath, localPath);
+  expect(album.remoteId, remoteId);
 }
 
 void _testValidAlbum({
@@ -36,9 +38,10 @@ void _testValidAlbum({
   required int sourceId,
   int? localSourceId,
   int? remoteSourceId,
-  required String reference,
   int? releaseYear,
   Uri? coverArtUri,
+  String? localPath,
+  String? remoteId,
 }) {
   final albumResult = Album.create(
     name: name,
@@ -46,7 +49,8 @@ void _testValidAlbum({
     artistName: artistName,
     localSourceId: localSourceId,
     remoteSourceId: remoteSourceId,
-    reference: reference,
+    localPath: localPath,
+    remoteId: remoteId,
     releaseYear: releaseYear,
     coverArtUri: coverArtUri,
   );
@@ -62,7 +66,8 @@ void _testValidAlbum({
     sourceId: sourceId,
     localSourceId: localSourceId,
     remoteSourceId: remoteSourceId,
-    reference: reference,
+    localPath: localPath,
+    remoteId: remoteId,
     releaseYear: releaseYear,
     coverArtUri: coverArtUri,
   );
@@ -76,7 +81,7 @@ void main() {
         name: "some album name",
         sourceId: 1,
         localSourceId: 1,
-        reference: "some-reference",
+        localPath: "some-reference",
       ),
     );
 
@@ -86,7 +91,7 @@ void main() {
         name: "some album name",
         sourceId: 2,
         remoteSourceId: 2,
-        reference: "some-reference",
+        remoteId: "some-reference",
       ),
     );
 
@@ -97,7 +102,8 @@ void main() {
         sourceId: 3,
         localSourceId: 3,
         remoteSourceId: 4,
-        reference: "some-reference",
+        localPath: "some-local",
+        remoteId: "some-remote",
       ),
     );
 
@@ -109,7 +115,7 @@ void main() {
         artistName: "Hello artist",
         sourceId: 6,
         localSourceId: 6,
-        reference: "some-reference",
+        localPath: "asdfasdf",
         releaseYear: 2026,
         coverArtUri: Uri.parse("file://some/cover.png"),
       ),
@@ -123,7 +129,7 @@ void main() {
         artistName: "Hello artist",
         sourceId: 8,
         remoteSourceId: 8,
-        reference: "some-reference",
+        remoteId: "some-id",
         releaseYear: 2026,
         coverArtUri: Uri.parse("file://some/cover.png"),
       ),
@@ -138,29 +144,86 @@ void main() {
         sourceId: 10,
         localSourceId: 10,
         remoteSourceId: 11,
-        reference: "some-reference",
+        localPath: "local-path",
+        remoteId: "remote-id",
         releaseYear: 2026,
         coverArtUri: Uri.parse("file://some/cover.png"),
       ),
     );
 
-    test("No source id", () {
-      final name = "some album name";
-      final reference = "some reference";
-      final albumResult = Album.create(name: name, reference: reference);
+    group("Errors", () {
+      void _testInvalidAlbum({
+        int? localSourceId,
+        int? remoteSourceId,
+        String? localPath,
+        String? remoteId,
+        required List<ProjectError> errors,
+      }) {
+        final result = Album.create(
+          name: "somea album name",
+          localSourceId: localSourceId,
+          remoteSourceId: remoteSourceId,
+          localPath: localPath,
+          remoteId: remoteId,
+        );
+        expect(result, isA<ResultError>());
+        expect(result.error, isA<MultiProjectError>());
+        expect((result.error as MultiProjectError).errors, containsAll(errors));
+      }
 
-      expect(albumResult, isA<ResultError>());
+      test(
+        "Missing local source Id",
+        () => _testInvalidAlbum(
+          localPath: "some-path",
+          errors: [
+            ProjectError(.entityAlbum, "pair", {"source": (.generic, "local")}),
+            ProjectError(.entityAlbum, "sources"),
+          ],
+        ),
+      );
 
-      final error = albumResult.error;
-      expect(error, isA<MultiProjectError>());
+      test(
+        "Missing local path",
+        () => _testInvalidAlbum(
+          localSourceId: 1,
+          errors: [
+            ProjectError(.entityAlbum, "pair", {"source": (.generic, "local")}),
+            ProjectError(.entityAlbum, "sources"),
+          ],
+        ),
+      );
 
-      final mpe = error as MultiProjectError;
-      expect(mpe.errors.length, 1);
+      test(
+        "Missing remote source id",
+        () => _testInvalidAlbum(
+          remoteId: "asdfasdfasdfasdf",
+          errors: [
+            ProjectError(.entityAlbum, "pair", {
+              "source": (.generic, "remote"),
+            }),
+            ProjectError(.entityAlbum, "sources"),
+          ],
+        ),
+      );
 
-      final pe = mpe.errors[0];
-      expect(pe.key, ErrorLocaleKey.entityAlbum);
-      expect(pe.id, "sources");
-      expect(pe.arguments, isNull);
+      test(
+        "Missing remote path",
+        () => _testInvalidAlbum(
+          remoteSourceId: 2,
+          errors: [
+            ProjectError(.entityAlbum, "pair", {
+              "source": (.generic, "remote"),
+            }),
+            ProjectError(.entityAlbum, "sources"),
+          ],
+        ),
+      );
+
+      test(
+        "Missing sources/references",
+        () =>
+            _testInvalidAlbum(errors: [ProjectError(.entityAlbum, "sources")]),
+      );
     });
   });
 }

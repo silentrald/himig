@@ -35,6 +35,9 @@ class MockRepoDatabase extends RepoDatabase {
   final _client = MockRepoClient();
 
   @override
+  String get version => "1.1.1";
+
+  @override
   RepoClient get client => _client;
 
   @override

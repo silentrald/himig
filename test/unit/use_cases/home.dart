@@ -35,8 +35,8 @@ void main() {
     );
 
     final initialAlbums = [
-      Album(id: 1, name: "My 1st album", reference: "reference"),
-      Album(id: 2, name: "Last album", reference: "no-reference"),
+      Album(id: 1, name: "My 1st album"),
+      Album(id: 2, name: "Last album"),
     ];
     final initialArtists = [
       Artist(id: 1, name: "My"),

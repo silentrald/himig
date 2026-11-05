@@ -26,18 +26,12 @@ void main() {
 
     final albumSongsList1 = [
       AlbumSongsDto(
-        album: Album(
-          id: 1,
-          artistId: 1,
-          name: "My 1st album",
-          reference: "reference",
-        ),
+        album: Album(id: 1, artistId: 1, name: "My 1st album"),
         songs: [
           Song(
             title: "some song 1",
             duration: Duration(seconds: 123),
             fileExtension: "mp3",
-            reference: "reference-song",
             albumId: 1,
             artistId: 1,
           ),
@@ -45,7 +39,6 @@ void main() {
             title: "some song 2",
             duration: Duration(seconds: 124),
             fileExtension: "mp3",
-            reference: "reference-song",
             albumId: 1,
             artistId: 1,
           ),
@@ -53,7 +46,6 @@ void main() {
             title: "some song 3",
             duration: Duration(seconds: 125),
             fileExtension: "mp3",
-            reference: "reference-song",
             albumId: 1,
             artistId: 1,
           ),
@@ -61,25 +53,18 @@ void main() {
             title: "some song 4",
             duration: Duration(seconds: 126),
             fileExtension: "mp3",
-            reference: "reference-song",
             albumId: 1,
             artistId: 1,
           ),
         ],
       ),
       AlbumSongsDto(
-        album: Album(
-          id: 2,
-          artistId: 1,
-          name: "Last album",
-          reference: "no-reference",
-        ),
+        album: Album(id: 2, artistId: 1, name: "Last album"),
         songs: [
           Song(
             title: "other",
             duration: Duration(seconds: 120),
             fileExtension: "flac",
-            reference: "reference-song",
             albumId: 2,
             artistId: 1,
           ),
@@ -88,7 +73,7 @@ void main() {
     ];
     final albumSongsList2 = [
       AlbumSongsDto(
-        album: Album(id: 100, artistId: 2, name: "asdf", reference: "test"),
+        album: Album(id: 100, artistId: 2, name: "asdf"),
         songs: [
           Song(
             id: 100,
@@ -97,7 +82,6 @@ void main() {
             title: "asdf",
             duration: Duration(seconds: 200),
             fileExtension: "mp3",
-            reference: "test",
           ),
         ],
       ),
@@ -109,7 +93,6 @@ void main() {
       title: "a_something",
       duration: Duration(seconds: 999),
       fileExtension: "mp3",
-      reference: "asdf",
     );
     final singleSong2 = Song(
       id: 1000,
@@ -117,18 +100,12 @@ void main() {
       title: "b_something",
       duration: Duration(seconds: 999),
       fileExtension: "mp3",
-      reference: "asdf",
     );
 
     final initialAlbums = [
       ...albumSongsList1.map((as) => as.album!),
       ...albumSongsList2.map((as) => as.album!),
-      Album(
-        id: 420,
-        artistId: 420,
-        name: "Outside album",
-        reference: "outside",
-      ),
+      Album(id: 420, artistId: 420, name: "Outside album"),
     ];
     final initialSongs = [
       ...albumSongsList1.map((as) => as.songs).flattened,

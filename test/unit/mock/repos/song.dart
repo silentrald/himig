@@ -1,5 +1,6 @@
 import "dart:math";
 
+import "package:collection/collection.dart";
 import "package:himig/backend/entities/song.dart";
 import "package:himig/backend/repos/song/types.dart";
 import "package:himig/backend/repos/types.dart";
@@ -12,6 +13,10 @@ class MockSongRepo extends SongRepo {
     _songs.clear();
     _songs.addAll(songs);
   }
+
+  @override
+  FutureResult<Song> getSong(RepoClient client, int songId) async =>
+      Result.ok(_songs.firstWhere((s) => s.id == songId));
 
   @override
   FutureResult<List<Song>> getSongList(
@@ -33,6 +38,21 @@ class MockSongRepo extends SongRepo {
     RepoClient client,
     int artistId,
   ) async => Result.ok(_songs.where((s) => s.artistId == artistId).toList());
+
+  @override
+  FutureResult<Song?> findSongByNames(
+    RepoClient client,
+    String songTitle,
+    String albumName,
+    String? artistName,
+  ) async => Result.ok(
+    _songs.firstWhereOrNull(
+      (s) =>
+          s.title == songTitle &&
+          s.albumName == albumName &&
+          s.artistName == artistName,
+    ),
+  );
 
   @override
   FutureResult<Song> insertSong(RepoClient client, Song song) async {

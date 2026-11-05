@@ -58,7 +58,7 @@ class Album {
     final remotePair = remoteSourceId != null && remoteId != null;
 
     if (!localPair && !remotePair) {
-      return ProjectError(.entitySong, "sources");
+      return ProjectError(.entityAlbum, "sources");
     }
 
     return null;
